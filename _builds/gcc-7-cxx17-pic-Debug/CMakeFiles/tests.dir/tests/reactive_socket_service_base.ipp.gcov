@@ -1,0 +1,307 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/impl/reactive_socket_service_base.ipp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/reactive_socket_service_base.ipp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_IMPL_REACTIVE_SOCKET_SERVICE_BASE_IPP
+        -:   12:#define BOOST_ASIO_DETAIL_IMPL_REACTIVE_SOCKET_SERVICE_BASE_IPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:
+        -:   20:#if !defined(BOOST_ASIO_HAS_IOCP) \
+        -:   21:  && !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+        -:   22:
+        -:   23:#include <boost/asio/detail/reactive_socket_service_base.hpp>
+        -:   24:
+        -:   25:#include <boost/asio/detail/push_options.hpp>
+        -:   26:
+        -:   27:namespace boost {
+        -:   28:namespace asio {
+        -:   29:namespace detail {
+        -:   30:
+        1:   31:reactive_socket_service_base::reactive_socket_service_base(
+        1:   32:    boost::asio::io_context& io_context)
+        -:   33:  : io_context_(io_context),
+        1:   34:    reactor_(use_service<reactor>(io_context))
+        -:   35:{
+        1:   36:  reactor_.init_task();
+        1:   37:}
+        -:   38:
+        1:   39:void reactive_socket_service_base::base_shutdown()
+        -:   40:{
+        1:   41:}
+        -:   42:
+        1:   43:void reactive_socket_service_base::construct(
+        -:   44:    reactive_socket_service_base::base_implementation_type& impl)
+        -:   45:{
+        1:   46:  impl.socket_ = invalid_socket;
+        1:   47:  impl.state_ = 0;
+        1:   48:}
+        -:   49:
+        -:   50:void reactive_socket_service_base::base_move_construct(
+        -:   51:    reactive_socket_service_base::base_implementation_type& impl,
+        -:   52:    reactive_socket_service_base::base_implementation_type& other_impl)
+        -:   53:{
+        -:   54:  impl.socket_ = other_impl.socket_;
+        -:   55:  other_impl.socket_ = invalid_socket;
+        -:   56:
+        -:   57:  impl.state_ = other_impl.state_;
+        -:   58:  other_impl.state_ = 0;
+        -:   59:
+        -:   60:  reactor_.move_descriptor(impl.socket_,
+        -:   61:      impl.reactor_data_, other_impl.reactor_data_);
+        -:   62:}
+        -:   63:
+        -:   64:void reactive_socket_service_base::base_move_assign(
+        -:   65:    reactive_socket_service_base::base_implementation_type& impl,
+        -:   66:    reactive_socket_service_base& other_service,
+        -:   67:    reactive_socket_service_base::base_implementation_type& other_impl)
+        -:   68:{
+        -:   69:  destroy(impl);
+        -:   70:
+        -:   71:  impl.socket_ = other_impl.socket_;
+        -:   72:  other_impl.socket_ = invalid_socket;
+        -:   73:
+        -:   74:  impl.state_ = other_impl.state_;
+        -:   75:  other_impl.state_ = 0;
+        -:   76:
+        -:   77:  other_service.reactor_.move_descriptor(impl.socket_,
+        -:   78:      impl.reactor_data_, other_impl.reactor_data_);
+        -:   79:}
+        -:   80:
+        1:   81:void reactive_socket_service_base::destroy(
+        -:   82:    reactive_socket_service_base::base_implementation_type& impl)
+        -:   83:{
+        1:   84:  if (impl.socket_ != invalid_socket)
+        -:   85:  {
+        -:   86:    BOOST_ASIO_HANDLER_OPERATION((reactor_.context(),
+        -:   87:          "socket", &impl, impl.socket_, "close"));
+        -:   88:
+    #####:   89:    reactor_.deregister_descriptor(impl.socket_, impl.reactor_data_,
+    #####:   90:        (impl.state_ & socket_ops::possible_dup) == 0);
+        -:   91:
+    #####:   92:    boost::system::error_code ignored_ec;
+    #####:   93:    socket_ops::close(impl.socket_, impl.state_, true, ignored_ec);
+        -:   94:
+    #####:   95:    reactor_.cleanup_descriptor_data(impl.reactor_data_);
+        -:   96:  }
+        1:   97:}
+        -:   98:
+        -:   99:boost::system::error_code reactive_socket_service_base::close(
+        -:  100:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  101:    boost::system::error_code& ec)
+        -:  102:{
+        -:  103:  if (is_open(impl))
+        -:  104:  {
+        -:  105:    BOOST_ASIO_HANDLER_OPERATION((reactor_.context(),
+        -:  106:          "socket", &impl, impl.socket_, "close"));
+        -:  107:
+        -:  108:    reactor_.deregister_descriptor(impl.socket_, impl.reactor_data_,
+        -:  109:        (impl.state_ & socket_ops::possible_dup) == 0);
+        -:  110:
+        -:  111:    socket_ops::close(impl.socket_, impl.state_, false, ec);
+        -:  112:
+        -:  113:    reactor_.cleanup_descriptor_data(impl.reactor_data_);
+        -:  114:  }
+        -:  115:  else
+        -:  116:  {
+        -:  117:    ec = boost::system::error_code();
+        -:  118:  }
+        -:  119:
+        -:  120:  // The descriptor is closed by the OS even if close() returns an error.
+        -:  121:  //
+        -:  122:  // (Actually, POSIX says the state of the descriptor is unspecified. On
+        -:  123:  // Linux the descriptor is apparently closed anyway; e.g. see
+        -:  124:  //   http://lkml.org/lkml/2005/9/10/129
+        -:  125:  // We'll just have to assume that other OSes follow the same behaviour. The
+        -:  126:  // known exception is when Windows's closesocket() function fails with
+        -:  127:  // WSAEWOULDBLOCK, but this case is handled inside socket_ops::close().
+        -:  128:  construct(impl);
+        -:  129:
+        -:  130:  return ec;
+        -:  131:}
+        -:  132:
+        -:  133:socket_type reactive_socket_service_base::release(
+        -:  134:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  135:    boost::system::error_code& ec)
+        -:  136:{
+        -:  137:  if (!is_open(impl))
+        -:  138:  {
+        -:  139:    ec = boost::asio::error::bad_descriptor;
+        -:  140:    return invalid_socket;
+        -:  141:  }
+        -:  142:
+        -:  143:  BOOST_ASIO_HANDLER_OPERATION((reactor_.context(),
+        -:  144:        "socket", &impl, impl.socket_, "release"));
+        -:  145:
+        -:  146:  reactor_.deregister_descriptor(impl.socket_, impl.reactor_data_, false);
+        -:  147:  reactor_.cleanup_descriptor_data(impl.reactor_data_);
+        -:  148:  socket_type sock = impl.socket_;
+        -:  149:  construct(impl);
+        -:  150:  ec = boost::system::error_code();
+        -:  151:  return sock;
+        -:  152:}
+        -:  153:
+        -:  154:boost::system::error_code reactive_socket_service_base::cancel(
+        -:  155:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  156:    boost::system::error_code& ec)
+        -:  157:{
+        -:  158:  if (!is_open(impl))
+        -:  159:  {
+        -:  160:    ec = boost::asio::error::bad_descriptor;
+        -:  161:    return ec;
+        -:  162:  }
+        -:  163:
+        -:  164:  BOOST_ASIO_HANDLER_OPERATION((reactor_.context(),
+        -:  165:        "socket", &impl, impl.socket_, "cancel"));
+        -:  166:
+        -:  167:  reactor_.cancel_ops(impl.socket_, impl.reactor_data_);
+        -:  168:  ec = boost::system::error_code();
+        -:  169:  return ec;
+        -:  170:}
+        -:  171:
+        -:  172:boost::system::error_code reactive_socket_service_base::do_open(
+        -:  173:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  174:    int af, int type, int protocol, boost::system::error_code& ec)
+        -:  175:{
+        -:  176:  if (is_open(impl))
+        -:  177:  {
+        -:  178:    ec = boost::asio::error::already_open;
+        -:  179:    return ec;
+        -:  180:  }
+        -:  181:
+        -:  182:  socket_holder sock(socket_ops::socket(af, type, protocol, ec));
+        -:  183:  if (sock.get() == invalid_socket)
+        -:  184:    return ec;
+        -:  185:
+        -:  186:  if (int err = reactor_.register_descriptor(sock.get(), impl.reactor_data_))
+        -:  187:  {
+        -:  188:    ec = boost::system::error_code(err,
+        -:  189:        boost::asio::error::get_system_category());
+        -:  190:    return ec;
+        -:  191:  }
+        -:  192:
+        -:  193:  impl.socket_ = sock.release();
+        -:  194:  switch (type)
+        -:  195:  {
+        -:  196:  case SOCK_STREAM: impl.state_ = socket_ops::stream_oriented; break;
+        -:  197:  case SOCK_DGRAM: impl.state_ = socket_ops::datagram_oriented; break;
+        -:  198:  default: impl.state_ = 0; break;
+        -:  199:  }
+        -:  200:  ec = boost::system::error_code();
+        -:  201:  return ec;
+        -:  202:}
+        -:  203:
+        -:  204:boost::system::error_code reactive_socket_service_base::do_assign(
+        -:  205:    reactive_socket_service_base::base_implementation_type& impl, int type,
+        -:  206:    const reactive_socket_service_base::native_handle_type& native_socket,
+        -:  207:    boost::system::error_code& ec)
+        -:  208:{
+        -:  209:  if (is_open(impl))
+        -:  210:  {
+        -:  211:    ec = boost::asio::error::already_open;
+        -:  212:    return ec;
+        -:  213:  }
+        -:  214:
+        -:  215:  if (int err = reactor_.register_descriptor(
+        -:  216:        native_socket, impl.reactor_data_))
+        -:  217:  {
+        -:  218:    ec = boost::system::error_code(err,
+        -:  219:        boost::asio::error::get_system_category());
+        -:  220:    return ec;
+        -:  221:  }
+        -:  222:
+        -:  223:  impl.socket_ = native_socket;
+        -:  224:  switch (type)
+        -:  225:  {
+        -:  226:  case SOCK_STREAM: impl.state_ = socket_ops::stream_oriented; break;
+        -:  227:  case SOCK_DGRAM: impl.state_ = socket_ops::datagram_oriented; break;
+        -:  228:  default: impl.state_ = 0; break;
+        -:  229:  }
+        -:  230:  impl.state_ |= socket_ops::possible_dup;
+        -:  231:  ec = boost::system::error_code();
+        -:  232:  return ec;
+        -:  233:}
+        -:  234:
+        -:  235:void reactive_socket_service_base::start_op(
+        -:  236:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  237:    int op_type, reactor_op* op, bool is_continuation,
+        -:  238:    bool is_non_blocking, bool noop)
+        -:  239:{
+        -:  240:  if (!noop)
+        -:  241:  {
+        -:  242:    if ((impl.state_ & socket_ops::non_blocking)
+        -:  243:        || socket_ops::set_internal_non_blocking(
+        -:  244:          impl.socket_, impl.state_, true, op->ec_))
+        -:  245:    {
+        -:  246:      reactor_.start_op(op_type, impl.socket_,
+        -:  247:          impl.reactor_data_, op, is_continuation, is_non_blocking);
+        -:  248:      return;
+        -:  249:    }
+        -:  250:  }
+        -:  251:
+        -:  252:  reactor_.post_immediate_completion(op, is_continuation);
+        -:  253:}
+        -:  254:
+        -:  255:void reactive_socket_service_base::start_accept_op(
+        -:  256:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  257:    reactor_op* op, bool is_continuation, bool peer_is_open)
+        -:  258:{
+        -:  259:  if (!peer_is_open)
+        -:  260:    start_op(impl, reactor::read_op, op, is_continuation, true, false);
+        -:  261:  else
+        -:  262:  {
+        -:  263:    op->ec_ = boost::asio::error::already_open;
+        -:  264:    reactor_.post_immediate_completion(op, is_continuation);
+        -:  265:  }
+        -:  266:}
+        -:  267:
+        -:  268:void reactive_socket_service_base::start_connect_op(
+        -:  269:    reactive_socket_service_base::base_implementation_type& impl,
+        -:  270:    reactor_op* op, bool is_continuation,
+        -:  271:    const socket_addr_type* addr, size_t addrlen)
+        -:  272:{
+        -:  273:  if ((impl.state_ & socket_ops::non_blocking)
+        -:  274:      || socket_ops::set_internal_non_blocking(
+        -:  275:        impl.socket_, impl.state_, true, op->ec_))
+        -:  276:  {
+        -:  277:    if (socket_ops::connect(impl.socket_, addr, addrlen, op->ec_) != 0)
+        -:  278:    {
+        -:  279:      if (op->ec_ == boost::asio::error::in_progress
+        -:  280:          || op->ec_ == boost::asio::error::would_block)
+        -:  281:      {
+        -:  282:        op->ec_ = boost::system::error_code();
+        -:  283:        reactor_.start_op(reactor::connect_op, impl.socket_,
+        -:  284:            impl.reactor_data_, op, is_continuation, false);
+        -:  285:        return;
+        -:  286:      }
+        -:  287:    }
+        -:  288:  }
+        -:  289:
+        -:  290:  reactor_.post_immediate_completion(op, is_continuation);
+        -:  291:}
+        -:  292:
+        -:  293:} // namespace detail
+        -:  294:} // namespace asio
+        -:  295:} // namespace boost
+        -:  296:
+        -:  297:#include <boost/asio/detail/pop_options.hpp>
+        -:  298:
+        -:  299:#endif // !defined(BOOST_ASIO_HAS_IOCP)
+        -:  300:       //   && !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+        -:  301:
+        -:  302:#endif // BOOST_ASIO_DETAIL_IMPL_REACTIVE_SOCKET_SERVICE_BASE_IPP

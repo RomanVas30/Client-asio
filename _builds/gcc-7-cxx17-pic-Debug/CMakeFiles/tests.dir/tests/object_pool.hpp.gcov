@@ -1,0 +1,178 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/object_pool.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/object_pool.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_OBJECT_POOL_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_OBJECT_POOL_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/noncopyable.hpp>
+        -:   19:
+        -:   20:#include <boost/asio/detail/push_options.hpp>
+        -:   21:
+        -:   22:namespace boost {
+        -:   23:namespace asio {
+        -:   24:namespace detail {
+        -:   25:
+        -:   26:template <typename Object>
+        -:   27:class object_pool;
+        -:   28:
+        -:   29:class object_pool_access
+        -:   30:{
+        -:   31:public:
+        -:   32:  template <typename Object>
+        -:   33:  static Object* create()
+        -:   34:  {
+        -:   35:    return new Object;
+        -:   36:  }
+        -:   37:
+        -:   38:  template <typename Object, typename Arg>
+        -:   39:  static Object* create(Arg arg)
+        -:   40:  {
+        -:   41:    return new Object(arg);
+        -:   42:  }
+        -:   43:
+        -:   44:  template <typename Object>
+    #####:   45:  static void destroy(Object* o)
+        -:   46:  {
+    #####:   47:    delete o;
+    #####:   48:  }
+        -:   49:
+        -:   50:  template <typename Object>
+    #####:   51:  static Object*& next(Object* o)
+        -:   52:  {
+    #####:   53:    return o->next_;
+        -:   54:  }
+        -:   55:
+        -:   56:  template <typename Object>
+    #####:   57:  static Object*& prev(Object* o)
+        -:   58:  {
+    #####:   59:    return o->prev_;
+        -:   60:  }
+        -:   61:};
+        -:   62:
+        -:   63:template <typename Object>
+        -:   64:class object_pool
+        -:   65:  : private noncopyable
+        -:   66:{
+        -:   67:public:
+        -:   68:  // Constructor.
+        1:   69:  object_pool()
+        -:   70:    : live_list_(0),
+        1:   71:      free_list_(0)
+        -:   72:  {
+        1:   73:  }
+        -:   74:
+        -:   75:  // Destructor destroys all objects.
+        1:   76:  ~object_pool()
+        -:   77:  {
+        1:   78:    destroy_list(live_list_);
+        1:   79:    destroy_list(free_list_);
+        1:   80:  }
+        -:   81:
+        -:   82:  // Get the object at the start of the live list.
+        1:   83:  Object* first()
+        -:   84:  {
+        1:   85:    return live_list_;
+        -:   86:  }
+        -:   87:
+        -:   88:  // Allocate a new object.
+        -:   89:  Object* alloc()
+        -:   90:  {
+        -:   91:    Object* o = free_list_;
+        -:   92:    if (o)
+        -:   93:      free_list_ = object_pool_access::next(free_list_);
+        -:   94:    else
+        -:   95:      o = object_pool_access::create<Object>();
+        -:   96:
+        -:   97:    object_pool_access::next(o) = live_list_;
+        -:   98:    object_pool_access::prev(o) = 0;
+        -:   99:    if (live_list_)
+        -:  100:      object_pool_access::prev(live_list_) = o;
+        -:  101:    live_list_ = o;
+        -:  102:
+        -:  103:    return o;
+        -:  104:  }
+        -:  105:
+        -:  106:  // Allocate a new object with an argument.
+        -:  107:  template <typename Arg>
+        -:  108:  Object* alloc(Arg arg)
+        -:  109:  {
+        -:  110:    Object* o = free_list_;
+        -:  111:    if (o)
+        -:  112:      free_list_ = object_pool_access::next(free_list_);
+        -:  113:    else
+        -:  114:      o = object_pool_access::create<Object>(arg);
+        -:  115:
+        -:  116:    object_pool_access::next(o) = live_list_;
+        -:  117:    object_pool_access::prev(o) = 0;
+        -:  118:    if (live_list_)
+        -:  119:      object_pool_access::prev(live_list_) = o;
+        -:  120:    live_list_ = o;
+        -:  121:
+        -:  122:    return o;
+        -:  123:  }
+        -:  124:
+        -:  125:  // Free an object. Moves it to the free list. No destructors are run.
+    #####:  126:  void free(Object* o)
+        -:  127:  {
+    #####:  128:    if (live_list_ == o)
+    #####:  129:      live_list_ = object_pool_access::next(o);
+        -:  130:
+    #####:  131:    if (object_pool_access::prev(o))
+        -:  132:    {
+    #####:  133:      object_pool_access::next(object_pool_access::prev(o))
+    #####:  134:        = object_pool_access::next(o);
+        -:  135:    }
+        -:  136:
+    #####:  137:    if (object_pool_access::next(o))
+        -:  138:    {
+    #####:  139:      object_pool_access::prev(object_pool_access::next(o))
+    #####:  140:        = object_pool_access::prev(o);
+        -:  141:    }
+        -:  142:
+    #####:  143:    object_pool_access::next(o) = free_list_;
+    #####:  144:    object_pool_access::prev(o) = 0;
+    #####:  145:    free_list_ = o;
+    #####:  146:  }
+        -:  147:
+        -:  148:private:
+        -:  149:  // Helper function to destroy all elements in a list.
+        2:  150:  void destroy_list(Object* list)
+        -:  151:  {
+        2:  152:    while (list)
+        -:  153:    {
+    #####:  154:      Object* o = list;
+    #####:  155:      list = object_pool_access::next(o);
+    #####:  156:      object_pool_access::destroy(o);
+        -:  157:    }
+        2:  158:  }
+        -:  159:
+        -:  160:  // The list of live objects.
+        -:  161:  Object* live_list_;
+        -:  162:
+        -:  163:  // The free list.
+        -:  164:  Object* free_list_;
+        -:  165:};
+        -:  166:
+        -:  167:} // namespace detail
+        -:  168:} // namespace asio
+        -:  169:} // namespace boost
+        -:  170:
+        -:  171:#include <boost/asio/detail/pop_options.hpp>
+        -:  172:
+        -:  173:#endif // BOOST_ASIO_DETAIL_OBJECT_POOL_HPP

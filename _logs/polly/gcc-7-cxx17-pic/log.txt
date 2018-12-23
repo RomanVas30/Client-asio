@@ -1,0 +1,84 @@
+Execute command: [
+  `which`
+  `cmake`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "which" "cmake"
+/usr/bin/cmake
+Execute command: [
+  `cmake`
+  `--version`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "--version"
+cmake version 3.10.2
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+Execute command: [
+  `cmake`
+  `-H.`
+  `-B/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug`
+  `-DCMAKE_BUILD_TYPE=Debug`
+  `-GUnix Makefiles`
+  `-DCMAKE_TOOLCHAIN_FILE=/home/vagrant/labs/lab-08-asio-client/tools/polly/gcc-7-cxx17-pic.cmake`
+  `-DCMAKE_EXE_LINKER=-fuse-ld=gold`
+  `-DBUILD_COVERAGE=ON`
+  `-DHUNTER_CONFIGURATION_TYPES=Debug`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "-H." "-B/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug" "-DCMAKE_BUILD_TYPE=Debug" "-GUnix Makefiles" "-DCMAKE_TOOLCHAIN_FILE=/home/vagrant/labs/lab-08-asio-client/tools/polly/gcc-7-cxx17-pic.cmake" "-DCMAKE_EXE_LINKER=-fuse-ld=gold" "-DBUILD_COVERAGE=ON" "-DHUNTER_CONFIGURATION_TYPES=Debug"
+-- [polly] Used toolchain: gcc 7 / c++17 support / PIC
+-- [hunter] Calculating Toolchain-SHA1
+-- [hunter] Calculating Config-SHA1
+-- [hunter] HUNTER_ROOT: /root/.hunter
+-- [hunter] [ Hunter-ID: 70287b1 | Toolchain-ID: fc9dcb2 | Config-ID: dffbc08 ]
+-- [hunter] GTEST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.8.0-hunter-p11)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- Boost version: 1.68.0
+-- Found the following Boost libraries:
+--   log
+--   thread
+--   filesystem
+--   system
+--   date_time
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug
+Execute command: [
+  `cmake`
+  `--build`
+  `/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug`
+  `--config`
+  `Debug`
+  `--target`
+  `lcov`
+  `--`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "--build" "/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug" "--config" "Debug" "--target" "lcov" "--"
+[  8%] Built target client
+[ 13%] Built target tests
+[ 21%] Built target tests-capture-init
+[ 32%] Built target client-capture-init
+[ 32%] Built target lcov-capture-init
+[ 56%] Built target lcov-geninfo-init
+Scanning dependencies of target client-geninfo
+[ 59%] Capturing coverage data for sources/client.cpp
+[ 62%] Capturing coverage data for sources/main.cpp
+[ 64%] Generating lcov/data/capture/client.info
+[ 67%] Post-processing lcov/data/capture/client.info
+[ 67%] Built target client-geninfo
+Scanning dependencies of target tests-geninfo
+[ 70%] Capturing coverage data for tests/test.cpp
+[ 72%] Generating lcov/data/capture/tests.info
+[ 75%] Post-processing lcov/data/capture/tests.info
+[ 75%] Built target tests-geninfo
+Scanning dependencies of target lcov-capture
+[ 75%] Built target lcov-capture
+Scanning dependencies of target lcov-geninfo
+[ 78%] Generating lcov/data/capture/all_targets.info
+[ 81%] Post-processing lcov/data/capture/all_targets.info
+[100%] Built target lcov-geninfo
+Scanning dependencies of target lcov
+[100%] Built target lcov

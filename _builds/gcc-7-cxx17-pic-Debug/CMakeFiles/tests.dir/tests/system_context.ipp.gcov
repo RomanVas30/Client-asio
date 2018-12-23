@@ -1,0 +1,80 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/impl/system_context.ipp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// impl/system_context.ipp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_IMPL_SYSTEM_CONTEXT_IPP
+        -:   12:#define BOOST_ASIO_IMPL_SYSTEM_CONTEXT_IPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/system_context.hpp>
+        -:   20:
+        -:   21:#include <boost/asio/detail/push_options.hpp>
+        -:   22:
+        -:   23:namespace boost {
+        -:   24:namespace asio {
+        -:   25:
+        -:   26:struct system_context::thread_function
+        -:   27:{
+        -:   28:  detail::scheduler* scheduler_;
+        -:   29:
+        -:   30:  void operator()()
+        -:   31:  {
+        -:   32:    boost::system::error_code ec;
+        -:   33:    scheduler_->run(ec);
+        -:   34:  }
+        -:   35:};
+        -:   36:
+        -:   37:system_context::system_context()
+        -:   38:  : scheduler_(use_service<detail::scheduler>(*this))
+        -:   39:{
+        -:   40:  scheduler_.work_started();
+        -:   41:
+        -:   42:  thread_function f = { &scheduler_ };
+        -:   43:  std::size_t num_threads = detail::thread::hardware_concurrency() * 2;
+        -:   44:  threads_.create_threads(f, num_threads ? num_threads : 2);
+        -:   45:}
+        -:   46:
+    #####:   47:system_context::~system_context()
+        -:   48:{
+    #####:   49:  scheduler_.work_finished();
+    #####:   50:  scheduler_.stop();
+    #####:   51:  threads_.join();
+    #####:   52:}
+        -:   53:
+        -:   54:void system_context::stop()
+        -:   55:{
+        -:   56:  scheduler_.stop();
+        -:   57:}
+        -:   58:
+        -:   59:bool system_context::stopped() const BOOST_ASIO_NOEXCEPT
+        -:   60:{
+        -:   61:  return scheduler_.stopped();
+        -:   62:}
+        -:   63:
+        -:   64:void system_context::join()
+        -:   65:{
+        -:   66:  scheduler_.work_finished();
+        -:   67:  threads_.join();
+        -:   68:}
+        -:   69:
+        -:   70:} // namespace asio
+        -:   71:} // namespace boost
+        -:   72:
+        -:   73:#include <boost/asio/detail/pop_options.hpp>
+        -:   74:
+        -:   75:#endif // BOOST_ASIO_IMPL_SYSTEM_CONTEXT_IPP

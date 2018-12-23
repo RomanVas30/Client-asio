@@ -1,0 +1,47 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/pthread/pthread_helpers.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef BOOST_THREAD_PTHREAD_PTHREAD_HELPERS_HPP
+        -:    2:#define BOOST_THREAD_PTHREAD_PTHREAD_HELPERS_HPP
+        -:    3:// Copyright (C) 2017
+        -:    4:// Vicente J. Botet Escriba
+        -:    5://
+        -:    6://  Distributed under the Boost Software License, Version 1.0. (See
+        -:    7://  accompanying file LICENSE_1_0.txt or copy at
+        -:    8://  http://www.boost.org/LICENSE_1_0.txt)
+        -:    9:
+        -:   10:#include <boost/thread/detail/config.hpp>
+        -:   11:#include <pthread.h>
+        -:   12:
+        -:   13:#include <boost/config/abi_prefix.hpp>
+        -:   14:
+        -:   15:namespace boost
+        -:   16:{
+        -:   17:    namespace pthread
+        -:   18:    {
+    #####:   19:      inline int cond_init(pthread_cond_t& cond) {
+        -:   20:
+        -:   21:  #ifdef BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+        -:   22:              pthread_condattr_t attr;
+    #####:   23:              int res = pthread_condattr_init(&attr);
+    #####:   24:              if (res)
+        -:   25:              {
+    #####:   26:                return res;
+        -:   27:              }
+    #####:   28:              pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+    #####:   29:              res=pthread_cond_init(&cond,&attr);
+    #####:   30:              pthread_condattr_destroy(&attr);
+    #####:   31:              return res;
+        -:   32:  #else
+        -:   33:              return pthread_cond_init(&cond,NULL);
+        -:   34:  #endif
+        -:   35:
+        -:   36:      }
+        -:   37:    }
+        -:   38:}
+        -:   39:
+        -:   40:#include <boost/config/abi_suffix.hpp>
+        -:   41:
+        -:   42:#endif

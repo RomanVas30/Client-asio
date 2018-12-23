@@ -1,0 +1,204 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/impl/service_registry.ipp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/impl/service_registry.ipp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_IPP
+        -:   12:#define BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_IPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <vector>
+        -:   20:#include <boost/asio/detail/service_registry.hpp>
+        -:   21:#include <boost/asio/detail/throw_exception.hpp>
+        -:   22:
+        -:   23:#include <boost/asio/detail/push_options.hpp>
+        -:   24:
+        -:   25:namespace boost {
+        -:   26:namespace asio {
+        -:   27:namespace detail {
+        -:   28:
+        -:   29:service_registry::service_registry(execution_context& owner)
+        -:   30:  : owner_(owner),
+        -:   31:    first_service_(0)
+        -:   32:{
+        -:   33:}
+        -:   34:
+        1:   35:service_registry::~service_registry()
+        -:   36:{
+        1:   37:}
+        -:   38:
+        1:   39:void service_registry::shutdown_services()
+        -:   40:{
+        1:   41:  execution_context::service* service = first_service_;
+        7:   42:  while (service)
+        -:   43:  {
+        3:   44:    service->shutdown();
+        3:   45:    service = service->next_;
+        -:   46:  }
+        1:   47:}
+        -:   48:
+        4:   49:void service_registry::destroy_services()
+        -:   50:{
+        7:   51:  while (first_service_)
+        -:   52:  {
+        3:   53:    execution_context::service* next_service = first_service_->next_;
+        3:   54:    destroy(first_service_);
+        3:   55:    first_service_ = next_service;
+        -:   56:  }
+        1:   57:}
+        -:   58:
+        -:   59:void service_registry::notify_fork(execution_context::fork_event fork_ev)
+        -:   60:{
+        -:   61:  // Make a copy of all of the services while holding the lock. We don't want
+        -:   62:  // to hold the lock while calling into each service, as it may try to call
+        -:   63:  // back into this class.
+        -:   64:  std::vector<execution_context::service*> services;
+        -:   65:  {
+        -:   66:    boost::asio::detail::mutex::scoped_lock lock(mutex_);
+        -:   67:    execution_context::service* service = first_service_;
+        -:   68:    while (service)
+        -:   69:    {
+        -:   70:      services.push_back(service);
+        -:   71:      service = service->next_;
+        -:   72:    }
+        -:   73:  }
+        -:   74:
+        -:   75:  // If processing the fork_prepare event, we want to go in reverse order of
+        -:   76:  // service registration, which happens to be the existing order of the
+        -:   77:  // services in the vector. For the other events we want to go in the other
+        -:   78:  // direction.
+        -:   79:  std::size_t num_services = services.size();
+        -:   80:  if (fork_ev == execution_context::fork_prepare)
+        -:   81:    for (std::size_t i = 0; i < num_services; ++i)
+        -:   82:      services[i]->notify_fork(fork_ev);
+        -:   83:  else
+        -:   84:    for (std::size_t i = num_services; i > 0; --i)
+        -:   85:      services[i - 1]->notify_fork(fork_ev);
+        -:   86:}
+        -:   87:
+        -:   88:void service_registry::init_key_from_id(execution_context::service::key& key,
+        -:   89:    const execution_context::id& id)
+        -:   90:{
+        -:   91:  key.type_info_ = 0;
+        -:   92:  key.id_ = &id;
+        -:   93:}
+        -:   94:
+        7:   95:bool service_registry::keys_match(
+        -:   96:    const execution_context::service::key& key1,
+        -:   97:    const execution_context::service::key& key2)
+        -:   98:{
+        7:   99:  if (key1.id_ && key2.id_)
+    #####:  100:    if (key1.id_ == key2.id_)
+    #####:  101:      return true;
+        7:  102:  if (key1.type_info_ && key2.type_info_)
+        7:  103:    if (*key1.type_info_ == *key2.type_info_)
+        2:  104:      return true;
+        5:  105:  return false;
+        -:  106:}
+        -:  107:
+        5:  108:void service_registry::destroy(execution_context::service* service)
+        -:  109:{
+        5:  110:  delete service;
+        5:  111:}
+        -:  112:
+        4:  113:execution_context::service* service_registry::do_use_service(
+        -:  114:    const execution_context::service::key& key,
+        -:  115:    factory_type factory, void* owner)
+        -:  116:{
+        8:  117:  boost::asio::detail::mutex::scoped_lock lock(mutex_);
+        -:  118:
+        -:  119:  // First see if there is an existing service object with the given key.
+        4:  120:  execution_context::service* service = first_service_;
+        8:  121:  while (service)
+        -:  122:  {
+        4:  123:    if (keys_match(service->key_, key))
+        2:  124:      return service;
+        2:  125:    service = service->next_;
+        -:  126:  }
+        -:  127:
+        -:  128:  // Create a new service object. The service registry's mutex is not locked
+        -:  129:  // at this time to allow for nested calls into this function from the new
+        -:  130:  // service's constructor.
+        2:  131:  lock.unlock();
+        4:  132:  auto_service_ptr new_service = { factory(owner) };
+        2:  133:  new_service.ptr_->key_ = key;
+        2:  134:  lock.lock();
+        -:  135:
+        -:  136:  // Check that nobody else created another service object of the same type
+        -:  137:  // while the lock was released.
+        2:  138:  service = first_service_;
+        8:  139:  while (service)
+        -:  140:  {
+        3:  141:    if (keys_match(service->key_, key))
+    #####:  142:      return service;
+        3:  143:    service = service->next_;
+        -:  144:  }
+        -:  145:
+        -:  146:  // Service was successfully initialised, pass ownership to registry.
+        2:  147:  new_service.ptr_->next_ = first_service_;
+        2:  148:  first_service_ = new_service.ptr_;
+        2:  149:  new_service.ptr_ = 0;
+        2:  150:  return first_service_;
+        -:  151:}
+        -:  152:
+        -:  153:void service_registry::do_add_service(
+        -:  154:    const execution_context::service::key& key,
+        -:  155:    execution_context::service* new_service)
+        -:  156:{
+        -:  157:  if (&owner_ != &new_service->context())
+        -:  158:    boost::asio::detail::throw_exception(invalid_service_owner());
+        -:  159:
+        -:  160:  boost::asio::detail::mutex::scoped_lock lock(mutex_);
+        -:  161:
+        -:  162:  // Check if there is an existing service object with the given key.
+        -:  163:  execution_context::service* service = first_service_;
+        -:  164:  while (service)
+        -:  165:  {
+        -:  166:    if (keys_match(service->key_, key))
+        -:  167:      boost::asio::detail::throw_exception(service_already_exists());
+        -:  168:    service = service->next_;
+        -:  169:  }
+        -:  170:
+        -:  171:  // Take ownership of the service object.
+        -:  172:  new_service->key_ = key;
+        -:  173:  new_service->next_ = first_service_;
+        -:  174:  first_service_ = new_service;
+        -:  175:}
+        -:  176:
+        -:  177:bool service_registry::do_has_service(
+        -:  178:    const execution_context::service::key& key) const
+        -:  179:{
+        -:  180:  boost::asio::detail::mutex::scoped_lock lock(mutex_);
+        -:  181:
+        -:  182:  execution_context::service* service = first_service_;
+        -:  183:  while (service)
+        -:  184:  {
+        -:  185:    if (keys_match(service->key_, key))
+        -:  186:      return true;
+        -:  187:    service = service->next_;
+        -:  188:  }
+        -:  189:
+        -:  190:  return false;
+        -:  191:}
+        -:  192:
+        -:  193:} // namespace detail
+        -:  194:} // namespace asio
+        -:  195:} // namespace boost
+        -:  196:
+        -:  197:#include <boost/asio/detail/pop_options.hpp>
+        -:  198:
+        -:  199:#endif // BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_IPP

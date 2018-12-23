@@ -2,4 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include <header.hpp>
+#include <client.hpp>
+
+TEST(Client, Test) {
+    talk_to_svr talk("user_login");
+    SUCCEED();
+}

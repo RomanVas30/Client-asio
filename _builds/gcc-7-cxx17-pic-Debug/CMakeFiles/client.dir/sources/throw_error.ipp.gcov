@@ -1,0 +1,52 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/impl/throw_error.ipp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/impl/throw_error.ipp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_IMPL_THROW_ERROR_IPP
+        -:   12:#define BOOST_ASIO_DETAIL_IMPL_THROW_ERROR_IPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/throw_error.hpp>
+        -:   20:#include <boost/asio/detail/throw_exception.hpp>
+        -:   21:#include <boost/system/system_error.hpp>
+        -:   22:
+        -:   23:#include <boost/asio/detail/push_options.hpp>
+        -:   24:
+        -:   25:namespace boost {
+        -:   26:namespace asio {
+        -:   27:namespace detail {
+        -:   28:
+        -:   29:void do_throw_error(const boost::system::error_code& err)
+        -:   30:{
+        -:   31:  boost::system::system_error e(err);
+        -:   32:  boost::asio::detail::throw_exception(e);
+        -:   33:}
+        -:   34:
+    #####:   35:void do_throw_error(const boost::system::error_code& err, const char* location)
+        -:   36:{
+    #####:   37:  boost::system::system_error e(err, location);
+    #####:   38:  boost::asio::detail::throw_exception(e);
+        -:   39:}
+        -:   40:
+        -:   41:} // namespace detail
+        -:   42:} // namespace asio
+        -:   43:} // namespace boost
+        -:   44:
+        -:   45:#include <boost/asio/detail/pop_options.hpp>
+        -:   46:
+        -:   47:#endif // BOOST_ASIO_DETAIL_IMPL_THROW_ERROR_IPP

@@ -1,0 +1,96 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/thread_group.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/thread_group.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_THREAD_GROUP_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_THREAD_GROUP_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/scoped_ptr.hpp>
+        -:   20:#include <boost/asio/detail/thread.hpp>
+        -:   21:
+        -:   22:namespace boost {
+        -:   23:namespace asio {
+        -:   24:namespace detail {
+        -:   25:
+        -:   26:class thread_group
+        -:   27:{
+        -:   28:public:
+        -:   29:  // Constructor initialises an empty thread group.
+        -:   30:  thread_group()
+        -:   31:    : first_(0)
+        -:   32:  {
+        -:   33:  }
+        -:   34:
+        -:   35:  // Destructor joins any remaining threads in the group.
+    #####:   36:  ~thread_group()
+    #####:   37:  {
+    #####:   38:    join();
+    #####:   39:  }
+        -:   40:
+        -:   41:  // Create a new thread in the group.
+        -:   42:  template <typename Function>
+        -:   43:  void create_thread(Function f)
+        -:   44:  {
+        -:   45:    first_ = new item(f, first_);
+        -:   46:  }
+        -:   47:
+        -:   48:  // Create new threads in the group.
+        -:   49:  template <typename Function>
+        -:   50:  void create_threads(Function f, std::size_t num_threads)
+        -:   51:  {
+        -:   52:    for (std::size_t i = 0; i < num_threads; ++i)
+        -:   53:      create_thread(f);
+        -:   54:  }
+        -:   55:
+        -:   56:  // Wait for all threads in the group to exit.
+    #####:   57:  void join()
+        -:   58:  {
+    #####:   59:    while (first_)
+        -:   60:    {
+    #####:   61:      first_->thread_.join();
+    #####:   62:      item* tmp = first_;
+    #####:   63:      first_ = first_->next_;
+    #####:   64:      delete tmp;
+        -:   65:    }
+    #####:   66:  }
+        -:   67:
+        -:   68:private:
+        -:   69:  // Structure used to track a single thread in the group.
+    #####:   70:  struct item
+        -:   71:  {
+        -:   72:    template <typename Function>
+        -:   73:    explicit item(Function f, item* next)
+        -:   74:      : thread_(f),
+        -:   75:        next_(next)
+        -:   76:    {
+        -:   77:    }
+        -:   78:
+        -:   79:    boost::asio::detail::thread thread_;
+        -:   80:    item* next_;
+        -:   81:  };
+        -:   82:
+        -:   83:  // The first thread in the group.
+        -:   84:  item* first_;
+        -:   85:};
+        -:   86:
+        -:   87:} // namespace detail
+        -:   88:} // namespace asio
+        -:   89:} // namespace boost
+        -:   90:
+        -:   91:#endif // BOOST_ASIO_DETAIL_THREAD_GROUP_HPP

@@ -1,0 +1,132 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/call_stack.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/call_stack.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_CALL_STACK_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_CALL_STACK_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/noncopyable.hpp>
+        -:   20:#include <boost/asio/detail/tss_ptr.hpp>
+        -:   21:
+        -:   22:#include <boost/asio/detail/push_options.hpp>
+        -:   23:
+        -:   24:namespace boost {
+        -:   25:namespace asio {
+        -:   26:namespace detail {
+        -:   27:
+        -:   28:// Helper class to determine whether or not the current thread is inside an
+        -:   29:// invocation of io_context::run() for a specified io_context object.
+        -:   30:template <typename Key, typename Value = unsigned char>
+        -:   31:class call_stack
+        -:   32:{
+        -:   33:public:
+        -:   34:  // Context class automatically pushes the key/value pair on to the stack.
+        -:   35:  class context
+        -:   36:    : private noncopyable
+        -:   37:  {
+        -:   38:  public:
+        -:   39:    // Push the key on to the stack.
+        -:   40:    explicit context(Key* k)
+        -:   41:      : key_(k),
+        -:   42:        next_(call_stack<Key, Value>::top_)
+        -:   43:    {
+        -:   44:      value_ = reinterpret_cast<unsigned char*>(this);
+        -:   45:      call_stack<Key, Value>::top_ = this;
+        -:   46:    }
+        -:   47:
+        -:   48:    // Push the key/value pair on to the stack.
+        -:   49:    context(Key* k, Value& v)
+        -:   50:      : key_(k),
+        -:   51:        value_(&v),
+        -:   52:        next_(call_stack<Key, Value>::top_)
+        -:   53:    {
+        -:   54:      call_stack<Key, Value>::top_ = this;
+        -:   55:    }
+        -:   56:
+        -:   57:    // Pop the key/value pair from the stack.
+        -:   58:    ~context()
+        -:   59:    {
+        -:   60:      call_stack<Key, Value>::top_ = next_;
+        -:   61:    }
+        -:   62:
+        -:   63:    // Find the next context with the same key.
+        -:   64:    Value* next_by_key() const
+        -:   65:    {
+        -:   66:      context* elem = next_;
+        -:   67:      while (elem)
+        -:   68:      {
+        -:   69:        if (elem->key_ == key_)
+        -:   70:          return elem->value_;
+        -:   71:        elem = elem->next_;
+        -:   72:      }
+        -:   73:      return 0;
+        -:   74:    }
+        -:   75:
+        -:   76:  private:
+        -:   77:    friend class call_stack<Key, Value>;
+        -:   78:
+        -:   79:    // The key associated with the context.
+        -:   80:    Key* key_;
+        -:   81:
+        -:   82:    // The value associated with the context.
+        -:   83:    Value* value_;
+        -:   84:
+        -:   85:    // The next element in the stack.
+        -:   86:    context* next_;
+        -:   87:  };
+        -:   88:
+        -:   89:  friend class context;
+        -:   90:
+        -:   91:  // Determine whether the specified owner is on the stack. Returns address of
+        -:   92:  // key if present, 0 otherwise.
+    #####:   93:  static Value* contains(Key* k)
+        -:   94:  {
+    #####:   95:    context* elem = top_;
+    #####:   96:    while (elem)
+        -:   97:    {
+    #####:   98:      if (elem->key_ == k)
+    #####:   99:        return elem->value_;
+    #####:  100:      elem = elem->next_;
+        -:  101:    }
+    #####:  102:    return 0;
+        -:  103:  }
+        -:  104:
+        -:  105:  // Obtain the value at the top of the stack.
+        -:  106:  static Value* top()
+        -:  107:  {
+        -:  108:    context* elem = top_;
+        -:  109:    return elem ? elem->value_ : 0;
+        -:  110:  }
+        -:  111:
+        -:  112:private:
+        -:  113:  // The top of the stack of calls for the current thread.
+        -:  114:  static tss_ptr<context> top_;
+        -:  115:};
+        -:  116:
+        -:  117:template <typename Key, typename Value>
+        -:  118:tss_ptr<typename call_stack<Key, Value>::context>
+        3:  119:call_stack<Key, Value>::top_;
+        -:  120:
+        -:  121:} // namespace detail
+        -:  122:} // namespace asio
+        -:  123:} // namespace boost
+        -:  124:
+        -:  125:#include <boost/asio/detail/pop_options.hpp>
+        -:  126:
+        -:  127:#endif // BOOST_ASIO_DETAIL_CALL_STACK_HPP

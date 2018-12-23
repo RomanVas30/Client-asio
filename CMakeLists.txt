@@ -31,27 +31,34 @@ find_package(Boost CONFIG REQUIRED log thread filesystem system date_time)
 
 add_library(client STATIC
   ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/source.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/client.cpp
 )
-add_executable(tests
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/source.cpp
-)
-# add_executable(tests
- # ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
-#)
 
+add_executable(main
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/client.cpp
+)
+
+add_executable(tests
+ ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
+)
 
 target_include_directories(client
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+target_include_directories(main
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 target_include_directories(tests
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# target_link_libraries(main Boost::boost Boost::log Boost::thread Boost::system Boost::filesystem server)
+target_link_libraries(main Boost::boost Boost::log Boost::thread Boost::system Boost::filesystem client)
 target_link_libraries(tests GTest::main Boost::boost Boost::log Boost::thread Boost::date_time Boost::system Boost::filesystem client)
 target_link_libraries(client Boost::log Boost::thread Boost::date_time Boost::system Boost::filesystem Boost::boost)
+
 enable_testing()
 add_test(NAME unit_tests COMMAND tests)
 

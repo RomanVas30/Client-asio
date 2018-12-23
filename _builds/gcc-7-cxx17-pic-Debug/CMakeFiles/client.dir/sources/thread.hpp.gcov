@@ -1,0 +1,853 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/detail/thread.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/main.cpp.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:#ifndef BOOST_THREAD_THREAD_COMMON_HPP
+        -:    2:#define BOOST_THREAD_THREAD_COMMON_HPP
+        -:    3:// Distributed under the Boost Software License, Version 1.0. (See
+        -:    4:// accompanying file LICENSE_1_0.txt or copy at
+        -:    5:// http://www.boost.org/LICENSE_1_0.txt)
+        -:    6:// (C) Copyright 2007-2010 Anthony Williams
+        -:    7:// (C) Copyright 2011-2012 Vicente J. Botet Escriba
+        -:    8:
+        -:    9:#include <boost/thread/detail/config.hpp>
+        -:   10:#include <boost/predef/platform.h>
+        -:   11:
+        -:   12:#include <boost/thread/exceptions.hpp>
+        -:   13:#ifndef BOOST_NO_IOSTREAM
+        -:   14:#include <ostream>
+        -:   15:#endif
+        -:   16:#include <boost/thread/detail/move.hpp>
+        -:   17:#include <boost/thread/mutex.hpp>
+        -:   18:#if defined BOOST_THREAD_USES_DATETIME
+        -:   19:#include <boost/thread/xtime.hpp>
+        -:   20:#endif
+        -:   21:#include <boost/thread/detail/thread_heap_alloc.hpp>
+        -:   22:#include <boost/thread/detail/make_tuple_indices.hpp>
+        -:   23:#include <boost/thread/detail/invoke.hpp>
+        -:   24:#include <boost/thread/detail/is_convertible.hpp>
+        -:   25:#include <boost/assert.hpp>
+        -:   26:#include <list>
+        -:   27:#include <algorithm>
+        -:   28:#include <boost/core/ref.hpp>
+        -:   29:#include <boost/cstdint.hpp>
+        -:   30:#include <boost/bind.hpp>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <memory>
+        -:   33:#include <boost/core/enable_if.hpp>
+        -:   34:#include <boost/type_traits/remove_reference.hpp>
+        -:   35:#include <boost/io/ios_state.hpp>
+        -:   36:#include <boost/type_traits/is_same.hpp>
+        -:   37:#include <boost/type_traits/decay.hpp>
+        -:   38:#include <boost/functional/hash.hpp>
+        -:   39:#include <boost/thread/detail/platform_time.hpp>
+        -:   40:#ifdef BOOST_THREAD_USES_CHRONO
+        -:   41:#include <boost/chrono/system_clocks.hpp>
+        -:   42:#include <boost/chrono/ceil.hpp>
+        -:   43:#endif
+        -:   44:
+        -:   45:#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        -:   46:#include <tuple>
+        -:   47:#endif
+        -:   48:#include <boost/config/abi_prefix.hpp>
+        -:   49:
+        -:   50:#ifdef BOOST_MSVC
+        -:   51:#pragma warning(push)
+        -:   52:#pragma warning(disable:4251)
+        -:   53:#endif
+        -:   54:
+        -:   55:namespace boost
+        -:   56:{
+        -:   57:
+        -:   58:    namespace detail
+        -:   59:    {
+        -:   60:
+        -:   61:#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        -:   62:
+        -:   63:      template<typename F, class ...ArgTypes>
+        -:   64:      class thread_data:
+        -:   65:          public detail::thread_data_base
+        -:   66:      {
+        -:   67:      public:
+        -:   68:          BOOST_THREAD_NO_COPYABLE(thread_data)
+        -:   69:            thread_data(BOOST_THREAD_RV_REF(F) f_, BOOST_THREAD_RV_REF(ArgTypes)... args_):
+        -:   70:              fp(boost::forward<F>(f_), boost::forward<ArgTypes>(args_)...)
+        -:   71:            {}
+        -:   72:          template <std::size_t ...Indices>
+        -:   73:          void run2(tuple_indices<Indices...>)
+        -:   74:          {
+        -:   75:
+        -:   76:              detail::invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
+        -:   77:          }
+        -:   78:          void run()
+        -:   79:          {
+        -:   80:              typedef typename make_tuple_indices<std::tuple_size<std::tuple<F, ArgTypes...> >::value, 1>::type index_type;
+        -:   81:
+        -:   82:              run2(index_type());
+        -:   83:          }
+        -:   84:
+        -:   85:      private:
+        -:   86:          std::tuple<typename decay<F>::type, typename decay<ArgTypes>::type...> fp;
+        -:   87:      };
+        -:   88:#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        -:   89:
+        -:   90:        template<typename F>
+    #####:   91:        class thread_data:
+        -:   92:            public detail::thread_data_base
+        -:   93:        {
+        -:   94:        public:
+        -:   95:            BOOST_THREAD_NO_COPYABLE(thread_data)
+        -:   96:#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    #####:   97:              thread_data(BOOST_THREAD_RV_REF(F) f_):
+    #####:   98:                f(boost::forward<F>(f_))
+    #####:   99:              {}
+        -:  100:// This overloading must be removed if we want the packaged_task's tests to pass.
+        -:  101://            thread_data(F& f_):
+        -:  102://                f(f_)
+        -:  103://            {}
+        -:  104:#else
+        -:  105:
+        -:  106:            thread_data(BOOST_THREAD_RV_REF(F) f_):
+        -:  107:              f(f_)
+        -:  108:            {}
+        -:  109:            thread_data(F f_):
+        -:  110:                f(f_)
+        -:  111:            {}
+        -:  112:#endif
+        -:  113:            //thread_data() {}
+        -:  114:
+    #####:  115:            void run()
+        -:  116:            {
+    #####:  117:                f();
+    #####:  118:            }
+        -:  119:
+        -:  120:        private:
+        -:  121:            F f;
+        -:  122:        };
+        -:  123:
+        -:  124:        template<typename F>
+        -:  125:        class thread_data<boost::reference_wrapper<F> >:
+        -:  126:            public detail::thread_data_base
+        -:  127:        {
+        -:  128:        private:
+        -:  129:            F& f;
+        -:  130:        public:
+        -:  131:            BOOST_THREAD_NO_COPYABLE(thread_data)
+        -:  132:            thread_data(boost::reference_wrapper<F> f_):
+        -:  133:                f(f_)
+        -:  134:            {}
+        -:  135:            void run()
+        -:  136:            {
+        -:  137:                f();
+        -:  138:            }
+        -:  139:        };
+        -:  140:
+        -:  141:        template<typename F>
+        -:  142:        class thread_data<const boost::reference_wrapper<F> >:
+        -:  143:            public detail::thread_data_base
+        -:  144:        {
+        -:  145:        private:
+        -:  146:            F& f;
+        -:  147:        public:
+        -:  148:            BOOST_THREAD_NO_COPYABLE(thread_data)
+        -:  149:            thread_data(const boost::reference_wrapper<F> f_):
+        -:  150:                f(f_)
+        -:  151:            {}
+        -:  152:            void run()
+        -:  153:            {
+        -:  154:                f();
+        -:  155:            }
+        -:  156:        };
+        -:  157:#endif
+        -:  158:    }
+        -:  159:
+        -:  160:    class BOOST_THREAD_DECL thread
+        -:  161:    {
+        -:  162:    public:
+        -:  163:      typedef thread_attributes attributes;
+        -:  164:
+        -:  165:      BOOST_THREAD_MOVABLE_ONLY(thread)
+        -:  166:    private:
+        -:  167:
+        -:  168:        struct dummy;
+        -:  169:
+        -:  170:        void release_handle();
+        -:  171:
+        -:  172:        detail::thread_data_ptr thread_info;
+        -:  173:
+        -:  174:    private:
+        -:  175:        bool start_thread_noexcept();
+        -:  176:        bool start_thread_noexcept(const attributes& attr);
+    #####:  177:        void start_thread()
+        -:  178:        {
+    #####:  179:          if (!start_thread_noexcept())
+        -:  180:          {
+    #####:  181:            boost::throw_exception(thread_resource_error());
+        -:  182:          }
+    #####:  183:        }
+        -:  184:        void start_thread(const attributes& attr)
+        -:  185:        {
+        -:  186:          if (!start_thread_noexcept(attr))
+        -:  187:          {
+        -:  188:            boost::throw_exception(thread_resource_error());
+        -:  189:          }
+        -:  190:        }
+        -:  191:
+        -:  192:        explicit thread(detail::thread_data_ptr data);
+        -:  193:
+        -:  194:        detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
+        -:  195:
+        -:  196:#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+        -:  197:#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        -:  198:        template<typename F, class ...ArgTypes>
+        -:  199:        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
+        -:  200:        {
+        -:  201:            return detail::thread_data_ptr(detail::heap_new<
+        -:  202:                  detail::thread_data<typename boost::remove_reference<F>::type, ArgTypes...>
+        -:  203:                  >(
+        -:  204:                    boost::forward<F>(f), boost::forward<ArgTypes>(args)...
+        -:  205:                  )
+        -:  206:                );
+        -:  207:        }
+        -:  208:#else
+        -:  209:        template<typename F>
+    #####:  210:        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
+        -:  211:        {
+        -:  212:            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(
+    #####:  213:                boost::forward<F>(f)));
+        -:  214:        }
+        -:  215:#endif
+        -:  216:        static inline detail::thread_data_ptr make_thread_info(void (*f)())
+        -:  217:        {
+        -:  218:            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(
+        -:  219:                boost::forward<void(*)()>(f)));
+        -:  220:        }
+        -:  221:#else
+        -:  222:        template<typename F>
+        -:  223:        static inline detail::thread_data_ptr make_thread_info(F f
+        -:  224:            , typename disable_if_c<
+        -:  225:                //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
+        -:  226:                is_same<typename decay<F>::type, thread>::value,
+        -:  227:                dummy* >::type=0
+        -:  228:                )
+        -:  229:        {
+        -:  230:            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
+        -:  231:        }
+        -:  232:        template<typename F>
+        -:  233:        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
+        -:  234:        {
+        -:  235:            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
+        -:  236:        }
+        -:  237:
+        -:  238:#endif
+        -:  239:    public:
+        -:  240:#if 0 // This should not be needed anymore. Use instead BOOST_THREAD_MAKE_RV_REF.
+        -:  241:#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
+        -:  242:        thread(const volatile thread&);
+        -:  243:#endif
+        -:  244:#endif
+        -:  245:        thread() BOOST_NOEXCEPT;
+    #####:  246:        ~thread()
+    #####:  247:        {
+        -:  248:
+        -:  249:    #if defined BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+        -:  250:          if (joinable()) {
+        -:  251:            std::terminate();
+        -:  252:          }
+        -:  253:    #else
+    #####:  254:            detach();
+        -:  255:    #endif
+    #####:  256:        }
+        -:  257:#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+        -:  258:        template <
+        -:  259:          class F
+        -:  260:        >
+    #####:  261:        explicit thread(BOOST_THREAD_RV_REF(F) f
+        -:  262:        //, typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
+        -:  263:        ):
+    #####:  264:          thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
+        -:  265:        {
+    #####:  266:            start_thread();
+    #####:  267:        }
+        -:  268:        template <
+        -:  269:          class F
+        -:  270:        >
+        -:  271:        thread(attributes const& attrs, BOOST_THREAD_RV_REF(F) f):
+        -:  272:          thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
+        -:  273:        {
+        -:  274:            start_thread(attrs);
+        -:  275:        }
+        -:  276:
+        -:  277:#else
+        -:  278:#ifdef BOOST_NO_SFINAE
+        -:  279:        template <class F>
+        -:  280:        explicit thread(F f):
+        -:  281:            thread_info(make_thread_info(f))
+        -:  282:        {
+        -:  283:            start_thread();
+        -:  284:        }
+        -:  285:        template <class F>
+        -:  286:        thread(attributes const& attrs, F f):
+        -:  287:            thread_info(make_thread_info(f))
+        -:  288:        {
+        -:  289:            start_thread(attrs);
+        -:  290:        }
+        -:  291:#else
+        -:  292:        template <class F>
+        -:  293:        explicit thread(F f
+        -:  294:        , typename disable_if_c<
+        -:  295:        boost::thread_detail::is_rv<F>::value // todo as a thread_detail::is_rv
+        -:  296:        //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
+        -:  297:            //|| is_same<typename decay<F>::type, thread>::value
+        -:  298:           , dummy* >::type=0
+        -:  299:        ):
+        -:  300:            thread_info(make_thread_info(f))
+        -:  301:        {
+        -:  302:            start_thread();
+        -:  303:        }
+        -:  304:        template <class F>
+        -:  305:        thread(attributes const& attrs, F f
+        -:  306:            , typename disable_if<boost::thread_detail::is_rv<F>, dummy* >::type=0
+        -:  307:            //, typename disable_if<boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
+        -:  308:        ):
+        -:  309:            thread_info(make_thread_info(f))
+        -:  310:        {
+        -:  311:            start_thread(attrs);
+        -:  312:        }
+        -:  313:#endif
+        -:  314:        template <class F>
+        -:  315:        explicit thread(BOOST_THREAD_RV_REF(F) f
+        -:  316:        , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
+        -:  317:        ):
+        -:  318:#ifdef BOOST_THREAD_USES_MOVE
+        -:  319:        thread_info(make_thread_info(boost::move<F>(f))) // todo : Add forward
+        -:  320:#else
+        -:  321:        thread_info(make_thread_info(f)) // todo : Add forward
+        -:  322:#endif
+        -:  323:        {
+        -:  324:            start_thread();
+        -:  325:        }
+        -:  326:
+        -:  327:        template <class F>
+        -:  328:        thread(attributes const& attrs, BOOST_THREAD_RV_REF(F) f):
+        -:  329:#ifdef BOOST_THREAD_USES_MOVE
+        -:  330:            thread_info(make_thread_info(boost::move<F>(f))) // todo : Add forward
+        -:  331:#else
+        -:  332:            thread_info(make_thread_info(f)) // todo : Add forward
+        -:  333:#endif
+        -:  334:        {
+        -:  335:            start_thread(attrs);
+        -:  336:        }
+        -:  337:#endif
+        -:  338:        thread(BOOST_THREAD_RV_REF(thread) x) BOOST_NOEXCEPT
+        -:  339:        {
+        -:  340:            thread_info=BOOST_THREAD_RV(x).thread_info;
+        -:  341:            BOOST_THREAD_RV(x).thread_info.reset();
+        -:  342:        }
+        -:  343:#if 0 // This should not be needed anymore. Use instead BOOST_THREAD_MAKE_RV_REF.
+        -:  344:#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
+        -:  345:        thread& operator=(thread x)
+        -:  346:        {
+        -:  347:            swap(x);
+        -:  348:            return *this;
+        -:  349:        }
+        -:  350:#endif
+        -:  351:#endif
+        -:  352:
+        -:  353:        thread& operator=(BOOST_THREAD_RV_REF(thread) other) BOOST_NOEXCEPT
+        -:  354:        {
+        -:  355:
+        -:  356:#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+        -:  357:            if (joinable()) std::terminate();
+        -:  358:#else
+        -:  359:            detach();
+        -:  360:#endif
+        -:  361:            thread_info=BOOST_THREAD_RV(other).thread_info;
+        -:  362:            BOOST_THREAD_RV(other).thread_info.reset();
+        -:  363:            return *this;
+        -:  364:        }
+        -:  365:
+        -:  366:#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        -:  367:        template <class F, class Arg, class ...Args>
+        -:  368:        thread(F&& f, Arg&& arg, Args&&... args) :
+        -:  369:          thread_info(make_thread_info(
+        -:  370:              thread_detail::decay_copy(boost::forward<F>(f)),
+        -:  371:              thread_detail::decay_copy(boost::forward<Arg>(arg)),
+        -:  372:              thread_detail::decay_copy(boost::forward<Args>(args))...)
+        -:  373:          )
+        -:  374:
+        -:  375:        {
+        -:  376:          start_thread();
+        -:  377:        }
+        -:  378:        template <class F, class Arg, class ...Args>
+        -:  379:        thread(attributes const& attrs, F&& f, Arg&& arg, Args&&... args) :
+        -:  380:          thread_info(make_thread_info(
+        -:  381:              thread_detail::decay_copy(boost::forward<F>(f)),
+        -:  382:              thread_detail::decay_copy(boost::forward<Arg>(arg)),
+        -:  383:              thread_detail::decay_copy(boost::forward<Args>(args))...)
+        -:  384:          )
+        -:  385:
+        -:  386:        {
+        -:  387:          start_thread(attrs);
+        -:  388:        }
+        -:  389:#else
+        -:  390:        template <class F,class A1>
+        -:  391:        thread(F f,A1 a1,typename disable_if<boost::thread_detail::is_convertible<F&,thread_attributes >, dummy* >::type=0):
+        -:  392:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1)))
+        -:  393:        {
+        -:  394:            start_thread();
+        -:  395:        }
+        -:  396:        template <class F,class A1,class A2>
+        -:  397:        thread(F f,A1 a1,A2 a2):
+        -:  398:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2)))
+        -:  399:        {
+        -:  400:            start_thread();
+        -:  401:        }
+        -:  402:
+        -:  403:        template <class F,class A1,class A2,class A3>
+        -:  404:        thread(F f,A1 a1,A2 a2,A3 a3):
+        -:  405:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3)))
+        -:  406:        {
+        -:  407:            start_thread();
+        -:  408:        }
+        -:  409:
+        -:  410:        template <class F,class A1,class A2,class A3,class A4>
+        -:  411:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4):
+        -:  412:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4)))
+        -:  413:        {
+        -:  414:            start_thread();
+        -:  415:        }
+        -:  416:
+        -:  417:        template <class F,class A1,class A2,class A3,class A4,class A5>
+        -:  418:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5):
+        -:  419:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5)))
+        -:  420:        {
+        -:  421:            start_thread();
+        -:  422:        }
+        -:  423:
+        -:  424:        template <class F,class A1,class A2,class A3,class A4,class A5,class A6>
+        -:  425:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6):
+        -:  426:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6)))
+        -:  427:        {
+        -:  428:            start_thread();
+        -:  429:        }
+        -:  430:
+        -:  431:        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7>
+        -:  432:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7):
+        -:  433:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7)))
+        -:  434:        {
+        -:  435:            start_thread();
+        -:  436:        }
+        -:  437:
+        -:  438:        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8>
+        -:  439:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8):
+        -:  440:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8)))
+        -:  441:        {
+        -:  442:            start_thread();
+        -:  443:        }
+        -:  444:
+        -:  445:        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8,class A9>
+        -:  446:        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8,A9 a9):
+        -:  447:            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8,a9)))
+        -:  448:        {
+        -:  449:            start_thread();
+        -:  450:        }
+        -:  451:#endif
+        -:  452:        void swap(thread& x) BOOST_NOEXCEPT
+        -:  453:        {
+        -:  454:            thread_info.swap(x.thread_info);
+        -:  455:        }
+        -:  456:
+        -:  457:        class id;
+        -:  458:        id get_id() const BOOST_NOEXCEPT;
+        -:  459:
+        -:  460:        bool joinable() const BOOST_NOEXCEPT;
+        -:  461:    private:
+        -:  462:        bool join_noexcept();
+        -:  463:        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
+        -:  464:        bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
+        -:  465:    public:
+        -:  466:        void join();
+        -:  467:
+        -:  468:#ifdef BOOST_THREAD_USES_CHRONO
+        -:  469:        template <class Duration>
+        -:  470:        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
+        -:  471:        {
+        -:  472:          return do_try_join_until(boost::detail::internal_platform_timepoint(t));
+        -:  473:        }
+        -:  474:
+        -:  475:        template <class Clock, class Duration>
+        -:  476:        bool try_join_until(const chrono::time_point<Clock, Duration>& t)
+        -:  477:        {
+        -:  478:          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+        -:  479:          common_duration d(t - Clock::now());
+        -:  480:          d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
+        -:  481:          while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
+        -:  482:          {
+        -:  483:            d = t - Clock::now();
+        -:  484:            if ( d <= common_duration::zero() ) return false; // timeout occurred
+        -:  485:            d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
+        -:  486:          }
+        -:  487:          return true;
+        -:  488:        }
+        -:  489:
+        -:  490:        template <class Rep, class Period>
+        -:  491:        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        -:  492:        {
+        -:  493:          return try_join_until(chrono::steady_clock::now() + rel_time);
+        -:  494:        }
+        -:  495:#endif
+        -:  496:#if defined BOOST_THREAD_USES_DATETIME
+        -:  497:        bool timed_join(const system_time& abs_time)
+        -:  498:        {
+        -:  499:          const detail::real_platform_timepoint ts(abs_time);
+        -:  500:#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+        -:  501:          detail::platform_duration d(ts - detail::real_platform_clock::now());
+        -:  502:          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  503:          while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
+        -:  504:          {
+        -:  505:            d = ts - detail::real_platform_clock::now();
+        -:  506:            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
+        -:  507:            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  508:          }
+        -:  509:          return true;
+        -:  510:#else
+        -:  511:          return do_try_join_until(ts);
+        -:  512:#endif
+        -:  513:        }
+        -:  514:
+        -:  515:        template<typename TimeDuration>
+        -:  516:        bool timed_join(TimeDuration const& rel_time)
+        -:  517:        {
+        -:  518:          detail::platform_duration d(rel_time);
+        -:  519:#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
+        -:  520:          const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+        -:  521:          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  522:          while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
+        -:  523:          {
+        -:  524:            d = ts - detail::mono_platform_clock::now();
+        -:  525:            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
+        -:  526:            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  527:          }
+        -:  528:          return true;
+        -:  529:#else
+        -:  530:          return do_try_join_until(detail::internal_platform_clock::now() + d);
+        -:  531:#endif
+        -:  532:        }
+        -:  533:#endif
+        -:  534:        void detach();
+        -:  535:
+        -:  536:        static unsigned hardware_concurrency() BOOST_NOEXCEPT;
+        -:  537:        static unsigned physical_concurrency() BOOST_NOEXCEPT;
+        -:  538:
+        -:  539:#define BOOST_THREAD_DEFINES_THREAD_NATIVE_HANDLE
+        -:  540:        typedef detail::thread_data_base::native_handle_type native_handle_type;
+        -:  541:        native_handle_type native_handle();
+        -:  542:
+        -:  543:#if defined BOOST_THREAD_PROVIDES_THREAD_EQ
+        -:  544:        // Use thread::id when comparisions are needed
+        -:  545:        // backwards compatibility
+        -:  546:        bool operator==(const thread& other) const;
+        -:  547:        bool operator!=(const thread& other) const;
+        -:  548:#endif
+        -:  549:#if defined BOOST_THREAD_USES_DATETIME
+        -:  550:        static inline void yield() BOOST_NOEXCEPT
+        -:  551:        {
+        -:  552:            this_thread::yield();
+        -:  553:        }
+        -:  554:
+        -:  555:        static inline void sleep(const system_time& xt)
+        -:  556:        {
+        -:  557:            this_thread::sleep(xt);
+        -:  558:        }
+        -:  559:#endif
+        -:  560:
+        -:  561:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  562:        // extensions
+        -:  563:        void interrupt();
+        -:  564:        bool interruption_requested() const BOOST_NOEXCEPT;
+        -:  565:#endif
+        -:  566:    };
+        -:  567:
+        -:  568:    inline void swap(thread& lhs,thread& rhs) BOOST_NOEXCEPT
+        -:  569:    {
+        -:  570:        return lhs.swap(rhs);
+        -:  571:    }
+        -:  572:
+        -:  573:#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+        -:  574:    inline thread&& move(thread& t) BOOST_NOEXCEPT
+        -:  575:    {
+        -:  576:        return static_cast<thread&&>(t);
+        -:  577:    }
+        -:  578:#endif
+        -:  579:
+        -:  580:    BOOST_THREAD_DCL_MOVABLE(thread)
+        -:  581:
+        -:  582:    namespace this_thread
+        -:  583:    {
+        -:  584:#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+        -:  585:        thread::id get_id() BOOST_NOEXCEPT;
+        -:  586:#else
+        -:  587:        thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
+        -:  588:#endif
+        -:  589:
+        -:  590:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  591:        void BOOST_THREAD_DECL interruption_point();
+        -:  592:        bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
+        -:  593:        bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
+        -:  594:#endif
+        -:  595:
+        -:  596:#if defined BOOST_THREAD_USES_DATETIME
+        -:  597:        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
+        -:  598:        {
+        -:  599:            sleep(system_time(abs_time));
+        -:  600:        }
+        -:  601:#endif
+        -:  602:    }
+        -:  603:
+        -:  604:    class BOOST_SYMBOL_VISIBLE thread::id
+        -:  605:    {
+        -:  606:    private:
+        -:  607:        friend inline
+        -:  608:        std::size_t
+        -:  609:        hash_value(const thread::id &v)
+        -:  610:        {
+        -:  611:#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        -:  612:          return hash_value(v.thread_data);
+        -:  613:#else
+        -:  614:          return hash_value(v.thread_data.get());
+        -:  615:#endif
+        -:  616:        }
+        -:  617:
+        -:  618:#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        -:  619:#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        -:  620:        typedef unsigned int data;
+        -:  621:#else
+        -:  622:        typedef thread::native_handle_type data;
+        -:  623:#endif
+        -:  624:#else
+        -:  625:        typedef detail::thread_data_ptr data;
+        -:  626:#endif
+        -:  627:        data thread_data;
+        -:  628:
+    #####:  629:        id(data thread_data_):
+    #####:  630:            thread_data(thread_data_)
+    #####:  631:        {}
+        -:  632:        friend class thread;
+        -:  633:        friend id BOOST_THREAD_DECL this_thread::get_id() BOOST_NOEXCEPT;
+        -:  634:    public:
+        -:  635:        id() BOOST_NOEXCEPT:
+        -:  636:#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        -:  637:        thread_data(0)
+        -:  638:#else
+        -:  639:        thread_data()
+        -:  640:#endif
+        -:  641:        {}
+        -:  642:
+        -:  643:        id(const id& other) BOOST_NOEXCEPT :
+        -:  644:            thread_data(other.thread_data)
+        -:  645:        {}
+        -:  646:
+    #####:  647:        bool operator==(const id& y) const BOOST_NOEXCEPT
+        -:  648:        {
+    #####:  649:            return thread_data==y.thread_data;
+        -:  650:        }
+        -:  651:
+        -:  652:        bool operator!=(const id& y) const BOOST_NOEXCEPT
+        -:  653:        {
+        -:  654:            return thread_data!=y.thread_data;
+        -:  655:        }
+        -:  656:
+        -:  657:        bool operator<(const id& y) const BOOST_NOEXCEPT
+        -:  658:        {
+        -:  659:            return thread_data<y.thread_data;
+        -:  660:        }
+        -:  661:
+        -:  662:        bool operator>(const id& y) const BOOST_NOEXCEPT
+        -:  663:        {
+        -:  664:            return y.thread_data<thread_data;
+        -:  665:        }
+        -:  666:
+        -:  667:        bool operator<=(const id& y) const BOOST_NOEXCEPT
+        -:  668:        {
+        -:  669:            return !(y.thread_data<thread_data);
+        -:  670:        }
+        -:  671:
+        -:  672:        bool operator>=(const id& y) const BOOST_NOEXCEPT
+        -:  673:        {
+        -:  674:            return !(thread_data<y.thread_data);
+        -:  675:        }
+        -:  676:
+        -:  677:#ifndef BOOST_NO_IOSTREAM
+        -:  678:#ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
+        -:  679:        template<class charT, class traits>
+        -:  680:        friend BOOST_SYMBOL_VISIBLE
+        -:  681:  std::basic_ostream<charT, traits>&
+        -:  682:        operator<<(std::basic_ostream<charT, traits>& os, const id& x)
+        -:  683:        {
+        -:  684:            if(x.thread_data)
+        -:  685:            {
+        -:  686:                io::ios_flags_saver  ifs( os );
+        -:  687:                return os<< std::hex << x.thread_data;
+        -:  688:            }
+        -:  689:            else
+        -:  690:            {
+        -:  691:                return os<<"{Not-any-thread}";
+        -:  692:            }
+        -:  693:        }
+        -:  694:#else
+        -:  695:        template<class charT, class traits>
+        -:  696:        BOOST_SYMBOL_VISIBLE
+        -:  697:  std::basic_ostream<charT, traits>&
+        -:  698:        print(std::basic_ostream<charT, traits>& os) const
+        -:  699:        {
+        -:  700:            if(thread_data)
+        -:  701:            {
+        -:  702:              io::ios_flags_saver  ifs( os );
+        -:  703:              return os<< std::hex << thread_data;
+        -:  704:            }
+        -:  705:            else
+        -:  706:            {
+        -:  707:                return os<<"{Not-any-thread}";
+        -:  708:            }
+        -:  709:        }
+        -:  710:
+        -:  711:#endif
+        -:  712:#endif
+        -:  713:    };
+        -:  714:
+        -:  715:#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+    #####:  716:    inline thread::id thread::get_id() const BOOST_NOEXCEPT
+        -:  717:    {
+        -:  718:    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+    #####:  719:        return const_cast<thread*>(this)->native_handle();
+        -:  720:    #else
+        -:  721:        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
+        -:  722:        return (local_thread_info? id(local_thread_info) : id());
+        -:  723:    #endif
+        -:  724:    }
+        -:  725:
+        -:  726:    namespace this_thread
+        -:  727:    {
+    #####:  728:        inline thread::id get_id() BOOST_NOEXCEPT
+        -:  729:        {
+        -:  730:        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+    #####:  731:             return pthread_self();
+        -:  732:        #else
+        -:  733:            boost::detail::thread_data_base* const thread_info=get_or_make_current_thread_data();
+        -:  734:            return (thread_info?thread::id(thread_info->shared_from_this()):thread::id());
+        -:  735:        #endif
+        -:  736:        }
+        -:  737:    }
+        -:  738:#endif
+    #####:  739:    inline void thread::join() {
+    #####:  740:        if (this_thread::get_id() == get_id())
+    #####:  741:          boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
+        -:  742:
+    #####:  743:        BOOST_THREAD_VERIFY_PRECONDITION( join_noexcept(),
+        -:  744:            thread_resource_error(static_cast<int>(system::errc::invalid_argument), "boost thread: thread not joinable")
+        -:  745:        );
+    #####:  746:    }
+        -:  747:
+        -:  748:    inline bool thread::do_try_join_until(detail::internal_platform_timepoint const &timeout)
+        -:  749:    {
+        -:  750:        if (this_thread::get_id() == get_id())
+        -:  751:          boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
+        -:  752:        bool res;
+        -:  753:        if (do_try_join_until_noexcept(timeout, res))
+        -:  754:        {
+        -:  755:          return res;
+        -:  756:        }
+        -:  757:        else
+        -:  758:        {
+        -:  759:          BOOST_THREAD_THROW_ELSE_RETURN(
+        -:  760:            (thread_resource_error(static_cast<int>(system::errc::invalid_argument), "boost thread: thread not joinable")),
+        -:  761:            false
+        -:  762:          );
+        -:  763:        }
+        -:  764:    }
+        -:  765:
+        -:  766:#if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
+        -:  767:    template<class charT, class traits>
+        -:  768:    BOOST_SYMBOL_VISIBLE
+        -:  769:    std::basic_ostream<charT, traits>&
+        -:  770:    operator<<(std::basic_ostream<charT, traits>& os, const thread::id& x)
+        -:  771:    {
+        -:  772:        return x.print(os);
+        -:  773:    }
+        -:  774:#endif
+        -:  775:
+        -:  776:#if defined BOOST_THREAD_PROVIDES_THREAD_EQ
+        -:  777:    inline bool thread::operator==(const thread& other) const
+        -:  778:    {
+        -:  779:        return get_id()==other.get_id();
+        -:  780:    }
+        -:  781:
+        -:  782:    inline bool thread::operator!=(const thread& other) const
+        -:  783:    {
+        -:  784:        return get_id()!=other.get_id();
+        -:  785:    }
+        -:  786:#endif
+        -:  787:
+        -:  788:    namespace detail
+        -:  789:    {
+        -:  790:        struct thread_exit_function_base
+        -:  791:        {
+        -:  792:            virtual ~thread_exit_function_base()
+        -:  793:            {}
+        -:  794:            virtual void operator()()=0;
+        -:  795:        };
+        -:  796:
+        -:  797:        template<typename F>
+        -:  798:        struct thread_exit_function:
+        -:  799:            thread_exit_function_base
+        -:  800:        {
+        -:  801:            F f;
+        -:  802:
+        -:  803:            thread_exit_function(F f_):
+        -:  804:                f(f_)
+        -:  805:            {}
+        -:  806:
+        -:  807:            void operator()()
+        -:  808:            {
+        -:  809:                f();
+        -:  810:            }
+        -:  811:        };
+        -:  812:
+        -:  813:        void BOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
+        -:  814://#ifndef BOOST_NO_EXCEPTIONS
+        -:  815:        struct shared_state_base;
+        -:  816:#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        -:  817:        inline void make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
+        -:  818:        {
+        -:  819:          detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
+        -:  820:          if(current_thread_data)
+        -:  821:          {
+        -:  822:            current_thread_data->make_ready_at_thread_exit(as);
+        -:  823:          }
+        -:  824:        }
+        -:  825:#else
+        -:  826:        void BOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as);
+        -:  827:#endif
+        -:  828://#endif
+        -:  829:    }
+        -:  830:
+        -:  831:    namespace this_thread
+        -:  832:    {
+        -:  833:        template<typename F>
+        -:  834:        void at_thread_exit(F f)
+        -:  835:        {
+        -:  836:            detail::thread_exit_function_base* const thread_exit_func=detail::heap_new<detail::thread_exit_function<F> >(f);
+        -:  837:            detail::add_thread_exit_function(thread_exit_func);
+        -:  838:        }
+        -:  839:    }
+        -:  840:}
+        -:  841:
+        -:  842:#ifdef BOOST_MSVC
+        -:  843:#pragma warning(pop)
+        -:  844:#endif
+        -:  845:
+        -:  846:#include <boost/config/abi_suffix.hpp>
+        -:  847:
+        -:  848:#endif

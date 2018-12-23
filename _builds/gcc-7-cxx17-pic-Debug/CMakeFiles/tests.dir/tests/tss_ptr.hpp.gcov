@@ -1,0 +1,76 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/tss_ptr.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/tss_ptr.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_TSS_PTR_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_TSS_PTR_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:
+        -:   20:#if !defined(BOOST_ASIO_HAS_THREADS)
+        -:   21:# include <boost/asio/detail/null_tss_ptr.hpp>
+        -:   22:#elif defined(BOOST_ASIO_HAS_THREAD_KEYWORD_EXTENSION)
+        -:   23:# include <boost/asio/detail/keyword_tss_ptr.hpp>
+        -:   24:#elif defined(BOOST_ASIO_WINDOWS)
+        -:   25:# include <boost/asio/detail/win_tss_ptr.hpp>
+        -:   26:#elif defined(BOOST_ASIO_HAS_PTHREADS)
+        -:   27:# include <boost/asio/detail/posix_tss_ptr.hpp>
+        -:   28:#else
+        -:   29:# error Only Windows and POSIX are supported!
+        -:   30:#endif
+        -:   31:
+        -:   32:#include <boost/asio/detail/push_options.hpp>
+        -:   33:
+        -:   34:namespace boost {
+        -:   35:namespace asio {
+        -:   36:namespace detail {
+        -:   37:
+        -:   38:template <typename T>
+        6:   39:class tss_ptr
+        -:   40:#if !defined(BOOST_ASIO_HAS_THREADS)
+        -:   41:  : public null_tss_ptr<T>
+        -:   42:#elif defined(BOOST_ASIO_HAS_THREAD_KEYWORD_EXTENSION)
+        -:   43:  : public keyword_tss_ptr<T>
+        -:   44:#elif defined(BOOST_ASIO_WINDOWS)
+        -:   45:  : public win_tss_ptr<T>
+        -:   46:#elif defined(BOOST_ASIO_HAS_PTHREADS)
+        -:   47:  : public posix_tss_ptr<T>
+        -:   48:#endif
+        -:   49:{
+        -:   50:public:
+        -:   51:  void operator=(T* value)
+        -:   52:  {
+        -:   53:#if !defined(BOOST_ASIO_HAS_THREADS)
+        -:   54:    null_tss_ptr<T>::operator=(value);
+        -:   55:#elif defined(BOOST_ASIO_HAS_THREAD_KEYWORD_EXTENSION)
+        -:   56:    keyword_tss_ptr<T>::operator=(value);
+        -:   57:#elif defined(BOOST_ASIO_WINDOWS)
+        -:   58:    win_tss_ptr<T>::operator=(value);
+        -:   59:#elif defined(BOOST_ASIO_HAS_PTHREADS)
+        -:   60:    posix_tss_ptr<T>::operator=(value);
+        -:   61:#endif
+        -:   62:  }
+        -:   63:};
+        -:   64:
+        -:   65:} // namespace detail
+        -:   66:} // namespace asio
+        -:   67:} // namespace boost
+        -:   68:
+        -:   69:#include <boost/asio/detail/pop_options.hpp>
+        -:   70:
+        -:   71:#endif // BOOST_ASIO_DETAIL_TSS_PTR_HPP

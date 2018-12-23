@@ -1,0 +1,6 @@
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/rebuild_cache.dir
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/test.dir
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/tests.dir
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/client.dir
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/edit_cache.dir
+/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug/CMakeFiles/main.dir

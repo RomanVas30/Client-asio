@@ -1,0 +1,75 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/pthread/pthread_mutex_scoped_lock.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/main.cpp.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:#ifndef BOOST_PTHREAD_MUTEX_SCOPED_LOCK_HPP
+        -:    2:#define BOOST_PTHREAD_MUTEX_SCOPED_LOCK_HPP
+        -:    3://  (C) Copyright 2007-8 Anthony Williams
+        -:    4://
+        -:    5://  Distributed under the Boost Software License, Version 1.0. (See
+        -:    6://  accompanying file LICENSE_1_0.txt or copy at
+        -:    7://  http://www.boost.org/LICENSE_1_0.txt)
+        -:    8:
+        -:    9:#include <pthread.h>
+        -:   10:#include <boost/assert.hpp>
+        -:   11:
+        -:   12:#include <boost/config/abi_prefix.hpp>
+        -:   13:
+        -:   14:namespace boost
+        -:   15:{
+        -:   16:    namespace pthread
+        -:   17:    {
+        -:   18:        class pthread_mutex_scoped_lock
+        -:   19:        {
+        -:   20:            pthread_mutex_t* m;
+        -:   21:            bool locked;
+        -:   22:        public:
+    #####:   23:            explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_) BOOST_NOEXCEPT:
+    #####:   24:                m(m_),locked(true)
+        -:   25:            {
+    #####:   26:                BOOST_VERIFY(!pthread_mutex_lock(m));
+    #####:   27:            }
+    #####:   28:            void unlock() BOOST_NOEXCEPT
+        -:   29:            {
+    #####:   30:                BOOST_VERIFY(!pthread_mutex_unlock(m));
+    #####:   31:                locked=false;
+    #####:   32:            }
+        -:   33:            void unlock_if_locked() BOOST_NOEXCEPT
+        -:   34:            {
+        -:   35:              if(locked)
+        -:   36:              {
+        -:   37:                  unlock();
+        -:   38:              }
+        -:   39:            }
+    #####:   40:            ~pthread_mutex_scoped_lock() BOOST_NOEXCEPT
+    #####:   41:            {
+    #####:   42:                if(locked)
+        -:   43:                {
+    #####:   44:                    unlock();
+        -:   45:                }
+    #####:   46:            }
+        -:   47:
+        -:   48:        };
+        -:   49:
+        -:   50:        class pthread_mutex_scoped_unlock
+        -:   51:        {
+        -:   52:            pthread_mutex_t* m;
+        -:   53:        public:
+        -:   54:            explicit pthread_mutex_scoped_unlock(pthread_mutex_t* m_) BOOST_NOEXCEPT:
+        -:   55:                m(m_)
+        -:   56:            {
+        -:   57:                BOOST_VERIFY(!pthread_mutex_unlock(m));
+        -:   58:            }
+        -:   59:            ~pthread_mutex_scoped_unlock() BOOST_NOEXCEPT
+        -:   60:            {
+        -:   61:                BOOST_VERIFY(!pthread_mutex_lock(m));
+        -:   62:            }
+        -:   63:
+        -:   64:        };
+        -:   65:    }
+        -:   66:}
+        -:   67:
+        -:   68:#include <boost/config/abi_suffix.hpp>
+        -:   69:
+        -:   70:#endif

@@ -1,0 +1,1 @@
+"cmake" "-H." "-B/home/vagrant/labs/lab-08-asio-client/_builds/sanitize-thread-cxx17-pic-Debug" "-DCMAKE_BUILD_TYPE=Debug" "-GUnix Makefiles" "-DCMAKE_TOOLCHAIN_FILE=/home/vagrant/labs/lab-08-asio-client/tools/polly/sanitize-thread-cxx17-pic.cmake" "-DCMAKE_EXE_LINKER=-fuse-ld=gold" "-DHUNTER_CONFIGURATION_TYPES=Debug"

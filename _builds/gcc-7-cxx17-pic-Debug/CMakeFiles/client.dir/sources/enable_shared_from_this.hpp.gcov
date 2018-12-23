@@ -1,0 +1,95 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/smart_ptr/enable_shared_from_this.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/main.cpp.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:#ifndef BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
+        -:    2:#define BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
+        -:    3:
+        -:    4://
+        -:    5://  enable_shared_from_this.hpp
+        -:    6://
+        -:    7://  Copyright 2002, 2009 Peter Dimov
+        -:    8://
+        -:    9://  Distributed under the Boost Software License, Version 1.0.
+        -:   10://  See accompanying file LICENSE_1_0.txt or copy at
+        -:   11://  http://www.boost.org/LICENSE_1_0.txt
+        -:   12://
+        -:   13://  See http://www.boost.org/libs/smart_ptr/ for documentation.
+        -:   14://
+        -:   15:
+        -:   16:#include <boost/smart_ptr/weak_ptr.hpp>
+        -:   17:#include <boost/smart_ptr/shared_ptr.hpp>
+        -:   18:#include <boost/smart_ptr/detail/sp_noexcept.hpp>
+        -:   19:#include <boost/assert.hpp>
+        -:   20:#include <boost/config.hpp>
+        -:   21:
+        -:   22:namespace boost
+        -:   23:{
+        -:   24:
+        -:   25:template<class T> class enable_shared_from_this
+        -:   26:{
+        -:   27:protected:
+        -:   28:
+    #####:   29:    BOOST_CONSTEXPR enable_shared_from_this() BOOST_SP_NOEXCEPT
+    #####:   30:    {
+    #####:   31:    }
+        -:   32:
+        -:   33:    BOOST_CONSTEXPR enable_shared_from_this(enable_shared_from_this const &) BOOST_SP_NOEXCEPT
+        -:   34:    {
+        -:   35:    }
+        -:   36:
+        -:   37:    enable_shared_from_this & operator=(enable_shared_from_this const &) BOOST_SP_NOEXCEPT
+        -:   38:    {
+        -:   39:        return *this;
+        -:   40:    }
+        -:   41:
+    #####:   42:    ~enable_shared_from_this() BOOST_SP_NOEXCEPT // ~weak_ptr<T> newer throws, so this call also must not throw
+        -:   43:    {
+    #####:   44:    }
+        -:   45:
+        -:   46:public:
+        -:   47:
+        -:   48:    shared_ptr<T> shared_from_this()
+        -:   49:    {
+        -:   50:        shared_ptr<T> p( weak_this_ );
+        -:   51:        BOOST_ASSERT( p.get() == this );
+        -:   52:        return p;
+        -:   53:    }
+        -:   54:
+        -:   55:    shared_ptr<T const> shared_from_this() const
+        -:   56:    {
+        -:   57:        shared_ptr<T const> p( weak_this_ );
+        -:   58:        BOOST_ASSERT( p.get() == this );
+        -:   59:        return p;
+        -:   60:    }
+        -:   61:
+        -:   62:    weak_ptr<T> weak_from_this() BOOST_SP_NOEXCEPT
+        -:   63:    {
+        -:   64:        return weak_this_;
+        -:   65:    }
+        -:   66:
+        -:   67:    weak_ptr<T const> weak_from_this() const BOOST_SP_NOEXCEPT
+        -:   68:    {
+        -:   69:        return weak_this_;
+        -:   70:    }
+        -:   71:
+        -:   72:public: // actually private, but avoids compiler template friendship issues
+        -:   73:
+        -:   74:    // Note: invoked automatically by shared_ptr; do not call
+    #####:   75:    template<class X, class Y> void _internal_accept_owner( shared_ptr<X> const * ppx, Y * py ) const BOOST_SP_NOEXCEPT
+        -:   76:    {
+    #####:   77:        if( weak_this_.expired() )
+        -:   78:        {
+    #####:   79:            weak_this_ = shared_ptr<T>( *ppx, py );
+        -:   80:        }
+    #####:   81:    }
+        -:   82:
+        -:   83:private:
+        -:   84:
+        -:   85:    mutable weak_ptr<T> weak_this_;
+        -:   86:};
+        -:   87:
+        -:   88:} // namespace boost
+        -:   89:
+        -:   90:#endif  // #ifndef BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED

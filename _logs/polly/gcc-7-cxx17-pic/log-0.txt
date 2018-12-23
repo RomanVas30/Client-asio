@@ -1,0 +1,430 @@
+Execute command: [
+  `which`
+  `cmake`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "which" "cmake"
+/usr/bin/cmake
+Execute command: [
+  `cmake`
+  `--version`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "--version"
+cmake version 3.10.2
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+Execute command: [
+  `cmake`
+  `-H.`
+  `-B/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug`
+  `-DCMAKE_BUILD_TYPE=Debug`
+  `-GUnix Makefiles`
+  `-DCMAKE_TOOLCHAIN_FILE=/home/vagrant/labs/lab-08-asio-client/tools/polly/gcc-7-cxx17-pic.cmake`
+  `-DCMAKE_EXE_LINKER=-fuse-ld=gold`
+  `-DBUILD_COVERAGE=ON`
+  `-DHUNTER_CONFIGURATION_TYPES=Debug`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "-H." "-B/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug" "-DCMAKE_BUILD_TYPE=Debug" "-GUnix Makefiles" "-DCMAKE_TOOLCHAIN_FILE=/home/vagrant/labs/lab-08-asio-client/tools/polly/gcc-7-cxx17-pic.cmake" "-DCMAKE_EXE_LINKER=-fuse-ld=gold" "-DBUILD_COVERAGE=ON" "-DHUNTER_CONFIGURATION_TYPES=Debug"
+-- [hunter] Initializing Hunter workspace (70287b1ffa810ee4e952052a9adff9b4856d0d54)
+-- [hunter]   https://github.com/ruslo/hunter/archive/v0.23.34.tar.gz
+-- [hunter]   -> /root/.hunter/_Base/Download/Hunter/0.23.34/70287b1
+-- [polly] Used toolchain: gcc 7 / c++17 support / PIC
+-- The C compiler identification is GNU 7.3.0
+-- The CXX compiler identification is GNU 7.3.0
+-- Check for working C compiler: /usr/bin/gcc-7
+-- Check for working C compiler: /usr/bin/gcc-7 -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/g++-7
+-- Check for working CXX compiler: /usr/bin/g++-7 -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- [hunter] Calculating Toolchain-SHA1
+-- [hunter] Calculating Config-SHA1
+-- [hunter] HUNTER_ROOT: /root/.hunter
+-- [hunter] [ Hunter-ID: 70287b1 | Toolchain-ID: fc9dcb2 | Config-ID: dffbc08 ]
+-- [hunter] GTEST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.8.0-hunter-p11)
+-- [hunter] Cache HIT: GTest
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/GTest/1.8.0-hunter-p11/76c6aec/0113760/12d12f9/e5fa44f/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Cache HIT: Boost
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/Boost/1.68.0-p1/0bb10b0/da39a3e/12d12f9/eeec021/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Cache HIT: Boost (comp.: log)
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/Boost/__log/1.68.0-p1/0bb10b0/da39a3e/12d12f9/eeec021/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Cache HIT: Boost (comp.: thread)
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/Boost/__thread/1.68.0-p1/0bb10b0/da39a3e/12d12f9/eeec021/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Cache HIT: Boost (comp.: filesystem)
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/Boost/__filesystem/1.68.0-p1/0bb10b0/da39a3e/12d12f9/eeec021/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Cache HIT: Boost (comp.: system)
+-- [hunter] Cache info: /root/.hunter/_Base/Cache/meta/fc9dcb2/Boost/__system/1.68.0-p1/0bb10b0/da39a3e/12d12f9/eeec021/da39a3e/cache.sha1
+-- [hunter] BOOST_ROOT: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install (ver.: 1.68.0-p1)
+-- [hunter] Building Boost (component: date_time)
+loading initial cache file /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/cache.cmake
+loading initial cache file /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time/args.cmake
+-- [polly] Used toolchain: gcc 7 / c++17 support / PIC
+-- The C compiler identification is GNU 7.3.0
+-- The CXX compiler identification is GNU 7.3.0
+-- Check for working C compiler: /usr/bin/gcc-7
+-- Check for working C compiler: /usr/bin/gcc-7 -- works
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/g++-7
+-- Check for working CXX compiler: /usr/bin/g++-7 -- works
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time/Build
+Scanning dependencies of target Boost-date_time
+[ 12%] Creating directories for 'Boost-date_time'
+[ 25%] Performing download step (download, verify and extract) for 'Boost-date_time'
+-- Downloading...
+   dst='/root/.hunter/_Base/Download/Boost/1.68.0-p1/0bb10b0/v1.68.0-p1.tar.gz'
+   timeout='none'
+-- Using src='https://github.com/hunter-packages/boost/archive/v1.68.0-p1.tar.gz'
+-- [download 0% complete]
+-- [download 1% complete]
+-- [download 2% complete]
+-- [download 3% complete]
+-- [download 4% complete]
+-- [download 5% complete]
+-- [download 6% complete]
+-- [download 7% complete]
+-- [download 8% complete]
+-- [download 9% complete]
+-- [download 10% complete]
+-- [download 11% complete]
+-- [download 12% complete]
+-- [download 13% complete]
+-- [download 14% complete]
+-- [download 15% complete]
+-- [download 16% complete]
+-- [download 17% complete]
+-- [download 18% complete]
+-- [download 19% complete]
+-- [download 20% complete]
+-- [download 21% complete]
+-- [download 22% complete]
+-- [download 23% complete]
+-- [download 24% complete]
+-- [download 25% complete]
+-- [download 26% complete]
+-- [download 27% complete]
+-- [download 28% complete]
+-- [download 29% complete]
+-- [download 30% complete]
+-- [download 31% complete]
+-- [download 32% complete]
+-- [download 33% complete]
+-- [download 34% complete]
+-- [download 35% complete]
+-- [download 36% complete]
+-- [download 37% complete]
+-- [download 38% complete]
+-- [download 39% complete]
+-- [download 40% complete]
+-- [download 41% complete]
+-- [download 42% complete]
+-- [download 43% complete]
+-- [download 44% complete]
+-- [download 45% complete]
+-- [download 46% complete]
+-- [download 47% complete]
+-- [download 48% complete]
+-- [download 49% complete]
+-- [download 50% complete]
+-- [download 51% complete]
+-- [download 52% complete]
+-- [download 53% complete]
+-- [download 54% complete]
+-- [download 55% complete]
+-- [download 56% complete]
+-- [download 57% complete]
+-- [download 58% complete]
+-- [download 59% complete]
+-- [download 60% complete]
+-- [download 61% complete]
+-- [download 62% complete]
+-- [download 63% complete]
+-- [download 64% complete]
+-- [download 65% complete]
+-- [download 66% complete]
+-- [download 67% complete]
+-- [download 68% complete]
+-- [download 69% complete]
+-- [download 70% complete]
+-- [download 71% complete]
+-- [download 72% complete]
+-- [download 73% complete]
+-- [download 74% complete]
+-- [download 75% complete]
+-- [download 76% complete]
+-- [download 77% complete]
+-- [download 78% complete]
+-- [download 79% complete]
+-- [download 80% complete]
+-- [download 81% complete]
+-- [download 82% complete]
+-- [download 83% complete]
+-- [download 84% complete]
+-- [download 85% complete]
+-- [download 86% complete]
+-- [download 87% complete]
+-- [download 88% complete]
+-- [download 89% complete]
+-- [download 90% complete]
+-- [download 91% complete]
+-- [download 92% complete]
+-- [download 93% complete]
+-- [download 94% complete]
+-- [download 95% complete]
+-- [download 96% complete]
+-- [download 97% complete]
+-- [download 98% complete]
+-- [download 99% complete]
+-- [download 100% complete]
+-- verifying file...
+       file='/root/.hunter/_Base/Download/Boost/1.68.0-p1/0bb10b0/v1.68.0-p1.tar.gz'
+-- Downloading... done
+-- extracting...
+     src='/root/.hunter/_Base/Download/Boost/1.68.0-p1/0bb10b0/v1.68.0-p1.tar.gz'
+     dst='/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time/Source'
+-- extracting... [tar xfz]
+-- extracting... [analysis]
+-- extracting... [rename]
+-- extracting... [clean up]
+-- extracting... done
+[ 37%] No patch step for 'Boost-date_time'
+[ 50%] Performing update step for 'Boost-date_time'
+[ 62%] Performing configure step for 'Boost-date_time'
+Dummy patch command
+Building Boost.Build engine with toolset gcc... tools/build/src/engine/bin.linuxx86_64/b2
+Detecting Python version... 2.7
+Detecting Python root... /usr
+Unicode/ICU support for Boost.Regex?... not found.
+Generating Boost.Build configuration in project-config.jam...
+
+Bootstrapping is done. To build, run:
+
+    ./b2
+
+To adjust configuration, edit 'project-config.jam'.
+Further information:
+
+   - Command line help:
+     ./b2 --help
+
+   - Getting started guide:
+     http://www.boost.org/more/getting_started/unix-variants.html
+
+   - Boost.Build documentation:
+     http://www.boost.org/build/doc/html/index.html
+
+[ 75%] Performing build step for 'Boost-date_time'
+Performing configuration checks
+
+    - default address-model    : 64-bit
+    - default architecture     : x86
+
+Building the Boost C++ Libraries.
+
+
+    - symlinks supported       : yes
+
+Component configuration:
+
+    - atomic                   : not building
+    - chrono                   : not building
+    - container                : not building
+    - context                  : not building
+    - contract                 : not building
+    - coroutine                : not building
+    - date_time                : building
+    - exception                : not building
+    - fiber                    : not building
+    - filesystem               : not building
+    - graph                    : not building
+    - graph_parallel           : not building
+    - iostreams                : not building
+    - locale                   : not building
+    - log                      : not building
+    - math                     : not building
+    - mpi                      : not building
+    - program_options          : not building
+    - python                   : not building
+    - random                   : not building
+    - regex                    : not building
+    - serialization            : not building
+    - signals                  : not building
+    - stacktrace               : not building
+    - system                   : not building
+    - test                     : not building
+    - thread                   : not building
+    - timer                    : not building
+    - type_erasure             : not building
+    - wave                     : not building
+
+...patience...
+...found 989 targets...
+...updating 28 targets...
+link.mklink boost/chrono/stopwatches.hpp
+mklink-or-dir boost/chrono/stopwatches
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/debug/link-static/threading-multi/gregorian/greg_weekday.o
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/release/link-static/threading-multi/gregorian/greg_weekday.o
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/release/link-static/threading-multi/gregorian/date_generators.o
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/debug/link-static/threading-multi/gregorian/greg_month.o
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/debug/link-static/threading-multi/gregorian/date_generators.o
+gcc.archive bin.v2/libs/date_time/build/gcc-7.3.0/debug/link-static/threading-multi/libboost_date_time-mt-d.a
+common.copy stage/lib/libboost_date_time-mt-d.a
+gcc.compile.c++ bin.v2/libs/date_time/build/gcc-7.3.0/release/link-static/threading-multi/gregorian/greg_month.o
+gcc.archive bin.v2/libs/date_time/build/gcc-7.3.0/release/link-static/threading-multi/libboost_date_time-mt.a
+common.copy stage/lib/libboost_date_time-mt.a
+...updated 28 targets...
+
+
+The Boost C++ Libraries were successfully built!
+
+The following directory should be added to compiler include paths:
+
+    /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time/Source
+
+The following directory should be added to linker library paths:
+
+    /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time/Source/stage/lib
+
+[ 87%] Performing install step for 'Boost-date_time'
+Performing configuration checks
+
+    - default address-model    : 64-bit
+    - default architecture     : x86
+    - symlinks supported       : yes
+
+Component configuration:
+
+    - atomic                   : not building
+    - chrono                   : not building
+    - container                : not building
+    - context                  : not building
+    - contract                 : not building
+    - coroutine                : not building
+    - date_time                : building
+    - exception                : not building
+    - fiber                    : not building
+    - filesystem               : not building
+    - graph                    : not building
+    - graph_parallel           : not building
+    - iostreams                : not building
+    - locale                   : not building
+    - log                      : not building
+    - math                     : not building
+    - mpi                      : not building
+    - program_options          : not building
+    - python                   : not building
+    - random                   : not building
+    - regex                    : not building
+    - serialization            : not building
+    - signals                  : not building
+    - stacktrace               : not building
+    - system                   : not building
+    - test                     : not building
+    - thread                   : not building
+    - timer                    : not building
+    - type_erasure             : not building
+    - wave                     : not building
+
+[100%] Completed 'Boost-date_time'
+[100%] Built target Boost-date_time
+-- [hunter] Build step successful (dir: /root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Build/Boost/__date_time)
+-- [hunter] Cache saved: /root/.hunter/_Base/Cache/raw/f1054ae6361a98114ddea4dbb799f596d0b57219.tar.bz2
+-- Boost version: 1.68.0
+-- Found the following Boost libraries:
+--   log
+--   thread
+--   filesystem
+--   system
+--   date_time
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE
+-- Looking for clock_gettime
+-- Looking for clock_gettime - found
+-- Try GNU code coverage flag = [-O0 -g -fprofile-arcs -ftest-coverage]
+-- Performing Test COVERAGE_FLAG_DETECTED
+-- Performing Test COVERAGE_FLAG_DETECTED - Success
+-- Found gcov evaluation for GNU: /usr/bin/gcov-7
+-- Found lcov: /usr/bin/lcov
+-- Configuring done
+-- Generating done
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_EXE_LINKER
+
+
+-- Build files have been written to: /home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug
+Execute command: [
+  `cmake`
+  `--build`
+  `/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug`
+  `--config`
+  `Debug`
+  `--`
+]
+[/home/vagrant/labs/lab-08-asio-client]> "cmake" "--build" "/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug" "--config" "Debug" "--"
+Scanning dependencies of target client
+[  4%] Building CXX object CMakeFiles/client.dir/sources/main.cpp.o
+[  8%] Building CXX object CMakeFiles/client.dir/sources/client.cpp.o
+[ 12%] Linking CXX static library libclientd.a
+[ 12%] Built target client
+Scanning dependencies of target tests
+[ 16%] Building CXX object CMakeFiles/tests.dir/tests/test.cpp.o
+[ 20%] Linking CXX executable tests
+[ 20%] Built target tests
+Scanning dependencies of target main
+[ 25%] Building CXX object CMakeFiles/main.dir/sources/main.cpp.o
+[ 29%] Building CXX object CMakeFiles/main.dir/sources/client.cpp.o
+[ 33%] Linking CXX executable main
+[ 33%] Built target main
+Scanning dependencies of target client-capture-init
+[ 37%] Capturing initial coverage data for sources/client.cpp
+[ 41%] Capturing initial coverage data for sources/main.cpp
+[ 45%] Generating lcov/data/init/client.info
+[ 50%] Post-processing lcov/data/init/client.info
+[ 50%] Built target client-capture-init
+Scanning dependencies of target tests-capture-init
+[ 54%] Capturing initial coverage data for tests/test.cpp
+[ 58%] Generating lcov/data/init/tests.info
+[ 62%] Post-processing lcov/data/init/tests.info
+[ 62%] Built target tests-capture-init
+Scanning dependencies of target lcov-capture-init
+[ 62%] Built target lcov-capture-init
+Scanning dependencies of target lcov-geninfo-init
+[ 66%] Generating lcov/data/init/all_targets.info
+[ 70%] Post-processing lcov/data/init/all_targets.info
+[100%] Built target lcov-geninfo-init
+Execute command: [
+  `ctest`
+  `-C`
+  `Debug`
+]
+[/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug]> "ctest" "-C" "Debug"
+Test project /home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug
+    Start 1: unit_tests
+1/1 Test #1: unit_tests .......................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.00 sec

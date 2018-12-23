@@ -1,0 +1,230 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/exceptions.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:// Copyright (C) 2001-2003
+        -:    2:// William E. Kempf
+        -:    3:// Copyright (C) 2007-9 Anthony Williams
+        -:    4:// (C) Copyright 2011-2012 Vicente J. Botet Escriba
+        -:    5://
+        -:    6://  Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    7://  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    8:
+        -:    9:#ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
+        -:   10:#define BOOST_THREAD_EXCEPTIONS_PDM070801_H
+        -:   11:
+        -:   12:#include <boost/thread/detail/config.hpp>
+        -:   13:
+        -:   14://  pdm: Sorry, but this class is used all over the place & I end up
+        -:   15://       with recursive headers if I don't separate it
+        -:   16://  wek: Not sure why recursive headers would cause compilation problems
+        -:   17://       given the include guards, but regardless it makes sense to
+        -:   18://       seperate this out any way.
+        -:   19:
+        -:   20:#include <string>
+        -:   21:#include <stdexcept>
+        -:   22:#include <boost/system/system_error.hpp>
+        -:   23:#include <boost/system/error_code.hpp>
+        -:   24:
+        -:   25:
+        -:   26:#include <boost/config/abi_prefix.hpp>
+        -:   27:
+        -:   28:namespace boost
+        -:   29:{
+        -:   30:
+        -:   31:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:   32:    class BOOST_SYMBOL_VISIBLE thread_interrupted
+        -:   33:    {};
+        -:   34:#endif
+        -:   35:
+    #####:   36:    class BOOST_SYMBOL_VISIBLE thread_exception:
+        -:   37:        public system::system_error
+        -:   38:        //public std::exception
+        -:   39:    {
+        -:   40:          typedef system::system_error base_type;
+        -:   41:    public:
+        -:   42:        thread_exception()
+        -:   43:          : base_type(0,system::generic_category())
+        -:   44:        {}
+        -:   45:
+        -:   46:        thread_exception(int sys_error_code)
+        -:   47:          : base_type(sys_error_code, system::generic_category())
+        -:   48:        {}
+        -:   49:
+    #####:   50:        thread_exception( int ev, const char * what_arg )
+    #####:   51:        : base_type(system::error_code(ev, system::generic_category()), what_arg)
+        -:   52:        {
+    #####:   53:        }
+        -:   54:        thread_exception( int ev, const std::string & what_arg )
+        -:   55:        : base_type(system::error_code(ev, system::generic_category()), what_arg)
+        -:   56:        {
+        -:   57:        }
+        -:   58:
+    #####:   59:        ~thread_exception() throw()
+    #####:   60:        {}
+        -:   61:
+        -:   62:
+        -:   63:        int native_error() const
+        -:   64:        {
+        -:   65:            return code().value();
+        -:   66:        }
+        -:   67:
+        -:   68:    };
+        -:   69:
+    #####:   70:    class BOOST_SYMBOL_VISIBLE condition_error:
+        -:   71:        public system::system_error
+        -:   72:        //public std::exception
+        -:   73:    {
+        -:   74:          typedef system::system_error base_type;
+        -:   75:    public:
+        -:   76:          condition_error()
+        -:   77:          : base_type(system::error_code(0, system::generic_category()), "Condition error")
+        -:   78:          {}
+        -:   79:          condition_error( int ev )
+        -:   80:          : base_type(system::error_code(ev, system::generic_category()), "Condition error")
+        -:   81:          {
+        -:   82:          }
+    #####:   83:          condition_error( int ev, const char * what_arg )
+    #####:   84:          : base_type(system::error_code(ev, system::generic_category()), what_arg)
+        -:   85:          {
+    #####:   86:          }
+        -:   87:          condition_error( int ev, const std::string & what_arg )
+        -:   88:          : base_type(system::error_code(ev, system::generic_category()), what_arg)
+        -:   89:          {
+        -:   90:          }
+        -:   91:    };
+        -:   92:
+        -:   93:
+    #####:   94:    class BOOST_SYMBOL_VISIBLE lock_error:
+        -:   95:        public thread_exception
+        -:   96:    {
+        -:   97:          typedef thread_exception base_type;
+        -:   98:    public:
+        -:   99:        lock_error()
+        -:  100:        : base_type(0, "boost::lock_error")
+        -:  101:        {}
+        -:  102:
+        -:  103:        lock_error( int ev )
+        -:  104:        : base_type(ev, "boost::lock_error")
+        -:  105:        {
+        -:  106:        }
+    #####:  107:        lock_error( int ev, const char * what_arg )
+    #####:  108:        : base_type(ev, what_arg)
+        -:  109:        {
+    #####:  110:        }
+        -:  111:        lock_error( int ev, const std::string & what_arg )
+        -:  112:        : base_type(ev, what_arg)
+        -:  113:        {
+        -:  114:        }
+        -:  115:
+    #####:  116:        ~lock_error() throw()
+    #####:  117:        {}
+        -:  118:
+        -:  119:    };
+        -:  120:
+    #####:  121:    class BOOST_SYMBOL_VISIBLE thread_resource_error:
+        -:  122:        public thread_exception
+        -:  123:    {
+        -:  124:          typedef thread_exception base_type;
+        -:  125:    public:
+        -:  126:          thread_resource_error()
+        -:  127:          : base_type(static_cast<int>(system::errc::resource_unavailable_try_again), "boost::thread_resource_error")
+        -:  128:          {}
+        -:  129:
+        -:  130:          thread_resource_error( int ev )
+        -:  131:          : base_type(ev, "boost::thread_resource_error")
+        -:  132:          {
+        -:  133:          }
+    #####:  134:          thread_resource_error( int ev, const char * what_arg )
+    #####:  135:          : base_type(ev, what_arg)
+        -:  136:          {
+    #####:  137:          }
+        -:  138:          thread_resource_error( int ev, const std::string & what_arg )
+        -:  139:          : base_type(ev, what_arg)
+        -:  140:          {
+        -:  141:          }
+        -:  142:
+        -:  143:
+    #####:  144:        ~thread_resource_error() throw()
+    #####:  145:        {}
+        -:  146:
+        -:  147:    };
+        -:  148:
+        -:  149:    class BOOST_SYMBOL_VISIBLE unsupported_thread_option:
+        -:  150:        public thread_exception
+        -:  151:    {
+        -:  152:          typedef thread_exception base_type;
+        -:  153:    public:
+        -:  154:          unsupported_thread_option()
+        -:  155:          : base_type(static_cast<int>(system::errc::invalid_argument), "boost::unsupported_thread_option")
+        -:  156:          {}
+        -:  157:
+        -:  158:          unsupported_thread_option( int ev )
+        -:  159:          : base_type(ev, "boost::unsupported_thread_option")
+        -:  160:          {
+        -:  161:          }
+        -:  162:          unsupported_thread_option( int ev, const char * what_arg )
+        -:  163:          : base_type(ev, what_arg)
+        -:  164:          {
+        -:  165:          }
+        -:  166:          unsupported_thread_option( int ev, const std::string & what_arg )
+        -:  167:          : base_type(ev, what_arg)
+        -:  168:          {
+        -:  169:          }
+        -:  170:
+        -:  171:    };
+        -:  172:
+        -:  173:    class BOOST_SYMBOL_VISIBLE invalid_thread_argument:
+        -:  174:        public thread_exception
+        -:  175:    {
+        -:  176:          typedef thread_exception base_type;
+        -:  177:    public:
+        -:  178:        invalid_thread_argument()
+        -:  179:        : base_type(static_cast<int>(system::errc::invalid_argument), "boost::invalid_thread_argument")
+        -:  180:        {}
+        -:  181:
+        -:  182:        invalid_thread_argument( int ev )
+        -:  183:        : base_type(ev, "boost::invalid_thread_argument")
+        -:  184:        {
+        -:  185:        }
+        -:  186:        invalid_thread_argument( int ev, const char * what_arg )
+        -:  187:        : base_type(ev, what_arg)
+        -:  188:        {
+        -:  189:        }
+        -:  190:        invalid_thread_argument( int ev, const std::string & what_arg )
+        -:  191:        : base_type(ev, what_arg)
+        -:  192:        {
+        -:  193:        }
+        -:  194:
+        -:  195:    };
+        -:  196:
+        -:  197:    class BOOST_SYMBOL_VISIBLE thread_permission_error:
+        -:  198:        public thread_exception
+        -:  199:    {
+        -:  200:          typedef thread_exception base_type;
+        -:  201:    public:
+        -:  202:          thread_permission_error()
+        -:  203:          : base_type(static_cast<int>(system::errc::permission_denied), "boost::thread_permission_error")
+        -:  204:          {}
+        -:  205:
+        -:  206:          thread_permission_error( int ev )
+        -:  207:          : base_type(ev, "boost::thread_permission_error")
+        -:  208:          {
+        -:  209:          }
+        -:  210:          thread_permission_error( int ev, const char * what_arg )
+        -:  211:          : base_type(ev, what_arg)
+        -:  212:          {
+        -:  213:          }
+        -:  214:          thread_permission_error( int ev, const std::string & what_arg )
+        -:  215:          : base_type(ev, what_arg)
+        -:  216:          {
+        -:  217:          }
+        -:  218:
+        -:  219:    };
+        -:  220:
+        -:  221:} // namespace boost
+        -:  222:
+        -:  223:#include <boost/config/abi_suffix.hpp>
+        -:  224:
+        -:  225:#endif

@@ -1,0 +1,119 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/conditionally_enabled_event.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/tests.dir/tests/test.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/conditionally_enabled_event.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_CONDITIONALLY_ENABLED_EVENT_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_CONDITIONALLY_ENABLED_EVENT_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/conditionally_enabled_mutex.hpp>
+        -:   20:#include <boost/asio/detail/event.hpp>
+        -:   21:#include <boost/asio/detail/noncopyable.hpp>
+        -:   22:#include <boost/asio/detail/null_event.hpp>
+        -:   23:#include <boost/asio/detail/scoped_lock.hpp>
+        -:   24:
+        -:   25:#include <boost/asio/detail/push_options.hpp>
+        -:   26:
+        -:   27:namespace boost {
+        -:   28:namespace asio {
+        -:   29:namespace detail {
+        -:   30:
+        -:   31:// Mutex adapter used to conditionally enable or disable locking.
+        -:   32:class conditionally_enabled_event
+        -:   33:  : private noncopyable
+        -:   34:{
+        -:   35:public:
+        -:   36:  // Constructor.
+        1:   37:  conditionally_enabled_event()
+        1:   38:  {
+        1:   39:  }
+        -:   40:
+        -:   41:  // Destructor.
+        1:   42:  ~conditionally_enabled_event()
+        1:   43:  {
+        1:   44:  }
+        -:   45:
+        -:   46:  // Signal the event. (Retained for backward compatibility.)
+        -:   47:  void signal(conditionally_enabled_mutex::scoped_lock& lock)
+        -:   48:  {
+        -:   49:    if (lock.mutex_.enabled_)
+        -:   50:      event_.signal(lock);
+        -:   51:  }
+        -:   52:
+        -:   53:  // Signal all waiters.
+    #####:   54:  void signal_all(conditionally_enabled_mutex::scoped_lock& lock)
+        -:   55:  {
+    #####:   56:    if (lock.mutex_.enabled_)
+    #####:   57:      event_.signal_all(lock);
+    #####:   58:  }
+        -:   59:
+        -:   60:  // Unlock the mutex and signal one waiter.
+        -:   61:  void unlock_and_signal_one(
+        -:   62:      conditionally_enabled_mutex::scoped_lock& lock)
+        -:   63:  {
+        -:   64:    if (lock.mutex_.enabled_)
+        -:   65:      event_.unlock_and_signal_one(lock);
+        -:   66:  }
+        -:   67:
+        -:   68:  // If there's a waiter, unlock the mutex and signal it.
+        1:   69:  bool maybe_unlock_and_signal_one(
+        -:   70:      conditionally_enabled_mutex::scoped_lock& lock)
+        -:   71:  {
+        1:   72:    if (lock.mutex_.enabled_)
+        1:   73:      return event_.maybe_unlock_and_signal_one(lock);
+        -:   74:    else
+    #####:   75:      return false;
+        -:   76:  }
+        -:   77:
+        -:   78:  // Reset the event.
+        -:   79:  void clear(conditionally_enabled_mutex::scoped_lock& lock)
+        -:   80:  {
+        -:   81:    if (lock.mutex_.enabled_)
+        -:   82:      event_.clear(lock);
+        -:   83:  }
+        -:   84:
+        -:   85:  // Wait for the event to become signalled.
+        -:   86:  void wait(conditionally_enabled_mutex::scoped_lock& lock)
+        -:   87:  {
+        -:   88:    if (lock.mutex_.enabled_)
+        -:   89:      event_.wait(lock);
+        -:   90:    else
+        -:   91:      null_event().wait(lock);
+        -:   92:  }
+        -:   93:
+        -:   94:  // Timed wait for the event to become signalled.
+        -:   95:  bool wait_for_usec(
+        -:   96:      conditionally_enabled_mutex::scoped_lock& lock, long usec)
+        -:   97:  {
+        -:   98:    if (lock.mutex_.enabled_)
+        -:   99:      return event_.wait_for_usec(lock, usec);
+        -:  100:    else
+        -:  101:      return null_event().wait_for_usec(lock, usec);
+        -:  102:  }
+        -:  103:
+        -:  104:private:
+        -:  105:  boost::asio::detail::event event_;
+        -:  106:};
+        -:  107:
+        -:  108:} // namespace detail
+        -:  109:} // namespace asio
+        -:  110:} // namespace boost
+        -:  111:
+        -:  112:#include <boost/asio/detail/pop_options.hpp>
+        -:  113:
+        -:  114:#endif // BOOST_ASIO_DETAIL_CONDITIONALLY_ENABLED_EVENT_HPP

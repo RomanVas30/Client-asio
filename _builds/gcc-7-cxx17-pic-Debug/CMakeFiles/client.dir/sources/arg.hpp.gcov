@@ -1,0 +1,74 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/bind/arg.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef BOOST_BIND_ARG_HPP_INCLUDED
+        -:    2:#define BOOST_BIND_ARG_HPP_INCLUDED
+        -:    3:
+        -:    4:// MS compatible compilers support #pragma once
+        -:    5:
+        -:    6:#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+        -:    7:# pragma once
+        -:    8:#endif
+        -:    9:
+        -:   10://
+        -:   11://  bind/arg.hpp
+        -:   12://
+        -:   13://  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
+        -:   14://
+        -:   15:// Distributed under the Boost Software License, Version 1.0. (See
+        -:   16:// accompanying file LICENSE_1_0.txt or copy at
+        -:   17:// http://www.boost.org/LICENSE_1_0.txt)
+        -:   18://
+        -:   19://  See http://www.boost.org/libs/bind/bind.html for documentation.
+        -:   20://
+        -:   21:
+        -:   22:#include <boost/config.hpp>
+        -:   23:#include <boost/is_placeholder.hpp>
+        -:   24:
+        -:   25:namespace boost
+        -:   26:{
+        -:   27:
+        -:   28:template<bool Eq> struct _arg_eq
+        -:   29:{
+        -:   30:};
+        -:   31:
+        -:   32:template<> struct _arg_eq<true>
+        -:   33:{
+        -:   34:    typedef void type;
+        -:   35:};
+        -:   36:
+        -:   37:template< int I > struct arg
+        -:   38:{
+    #####:   39:    BOOST_CONSTEXPR arg()
+        -:   40:    {
+    #####:   41:    }
+        -:   42:
+        -:   43:    template< class T > BOOST_CONSTEXPR arg( T const & /* t */, typename _arg_eq< I == is_placeholder<T>::value >::type * = 0 )
+        -:   44:    {
+        -:   45:    }
+        -:   46:};
+        -:   47:
+        -:   48:template< int I > BOOST_CONSTEXPR bool operator==( arg<I> const &, arg<I> const & )
+        -:   49:{
+        -:   50:    return true;
+        -:   51:}
+        -:   52:
+        -:   53:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:   54:
+        -:   55:template< int I > struct is_placeholder< arg<I> >
+        -:   56:{
+        -:   57:    enum _vt { value = I };
+        -:   58:};
+        -:   59:
+        -:   60:template< int I > struct is_placeholder< arg<I> (*) () >
+        -:   61:{
+        -:   62:    enum _vt { value = I };
+        -:   63:};
+        -:   64:
+        -:   65:#endif
+        -:   66:
+        -:   67:} // namespace boost
+        -:   68:
+        -:   69:#endif // #ifndef BOOST_BIND_ARG_HPP_INCLUDED

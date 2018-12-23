@@ -1,0 +1,87 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/posix_global.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/posix_global.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_POSIX_GLOBAL_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_POSIX_GLOBAL_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:
+        -:   20:#if defined(BOOST_ASIO_HAS_PTHREADS)
+        -:   21:
+        -:   22:#include <exception>
+        -:   23:#include <pthread.h>
+        -:   24:
+        -:   25:#include <boost/asio/detail/push_options.hpp>
+        -:   26:
+        -:   27:namespace boost {
+        -:   28:namespace asio {
+        -:   29:namespace detail {
+        -:   30:
+        -:   31:template <typename T>
+        -:   32:struct posix_global_impl
+        -:   33:{
+        -:   34:  // Helper function to perform initialisation.
+        -:   35:  static void do_init()
+        -:   36:  {
+        -:   37:    instance_.static_ptr_ = instance_.ptr_ = new T;
+        -:   38:  }
+        -:   39:
+        -:   40:  // Destructor automatically cleans up the global.
+    #####:   41:  ~posix_global_impl()
+        -:   42:  {
+    #####:   43:    delete static_ptr_;
+    #####:   44:  }
+        -:   45:
+        -:   46:  static ::pthread_once_t init_once_;
+        -:   47:  static T* static_ptr_;
+        -:   48:  static posix_global_impl instance_;
+        -:   49:  T* ptr_;
+        -:   50:};
+        -:   51:
+        -:   52:template <typename T>
+        -:   53:::pthread_once_t posix_global_impl<T>::init_once_ = PTHREAD_ONCE_INIT;
+        -:   54:
+        -:   55:template <typename T>
+        -:   56:T* posix_global_impl<T>::static_ptr_ = 0;
+        -:   57:
+        -:   58:template <typename T>
+        1:   59:posix_global_impl<T> posix_global_impl<T>::instance_;
+        -:   60:
+        -:   61:template <typename T>
+        -:   62:T& posix_global()
+        -:   63:{
+        -:   64:  int result = ::pthread_once(
+        -:   65:      &posix_global_impl<T>::init_once_,
+        -:   66:      &posix_global_impl<T>::do_init);
+        -:   67:
+        -:   68:  if (result != 0)
+        -:   69:    std::terminate();
+        -:   70:
+        -:   71:  return *posix_global_impl<T>::instance_.ptr_;
+        -:   72:}
+        -:   73:
+        -:   74:} // namespace detail
+        -:   75:} // namespace asio
+        -:   76:} // namespace boost
+        -:   77:
+        -:   78:#include <boost/asio/detail/pop_options.hpp>
+        -:   79:
+        -:   80:#endif // defined(BOOST_ASIO_HAS_PTHREADS)
+        -:   81:
+        -:   82:#endif // BOOST_ASIO_DETAIL_POSIX_GLOBAL_HPP

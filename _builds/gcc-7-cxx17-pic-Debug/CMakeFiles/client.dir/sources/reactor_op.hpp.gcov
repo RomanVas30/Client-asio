@@ -1,0 +1,72 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/reactor_op.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/reactor_op.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_REACTOR_OP_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_REACTOR_OP_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/operation.hpp>
+        -:   20:
+        -:   21:#include <boost/asio/detail/push_options.hpp>
+        -:   22:
+        -:   23:namespace boost {
+        -:   24:namespace asio {
+        -:   25:namespace detail {
+        -:   26:
+        -:   27:class reactor_op
+        -:   28:  : public operation
+        -:   29:{
+        -:   30:public:
+        -:   31:  // The error code to be passed to the completion handler.
+        -:   32:  boost::system::error_code ec_;
+        -:   33:
+        -:   34:  // The number of bytes transferred, to be passed to the completion handler.
+        -:   35:  std::size_t bytes_transferred_;
+        -:   36:
+        -:   37:  // Status returned by perform function. May be used to decide whether it is
+        -:   38:  // worth performing more operations on the descriptor immediately.
+        -:   39:  enum status { not_done, done, done_and_exhausted };
+        -:   40:
+        -:   41:  // Perform the operation. Returns true if it is finished.
+    #####:   42:  status perform()
+        -:   43:  {
+    #####:   44:    return perform_func_(this);
+        -:   45:  }
+        -:   46:
+        -:   47:protected:
+        -:   48:  typedef status (*perform_func_type)(reactor_op*);
+        -:   49:
+        -:   50:  reactor_op(perform_func_type perform_func, func_type complete_func)
+        -:   51:    : operation(complete_func),
+        -:   52:      bytes_transferred_(0),
+        -:   53:      perform_func_(perform_func)
+        -:   54:  {
+        -:   55:  }
+        -:   56:
+        -:   57:private:
+        -:   58:  perform_func_type perform_func_;
+        -:   59:};
+        -:   60:
+        -:   61:} // namespace detail
+        -:   62:} // namespace asio
+        -:   63:} // namespace boost
+        -:   64:
+        -:   65:#include <boost/asio/detail/pop_options.hpp>
+        -:   66:
+        -:   67:#endif // BOOST_ASIO_DETAIL_REACTOR_OP_HPP

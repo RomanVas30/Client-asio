@@ -1,0 +1,29 @@
+Start testing: Dec 23 23:29 UTC
+----------------------------------------------------------
+1/1 Testing: unit_tests
+1/1 Test: unit_tests
+Command: "/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/tests"
+Directory: /home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug
+"unit_tests" start time: Dec 23 23:29 UTC
+Output:
+----------------------------------------------------------
+Running main() from gtest_main.cc
+[==========] Running 1 test from 1 test case.
+[----------] Global test environment set-up.
+[----------] 1 test from Client
+[ RUN      ] Client.Test
+[       OK ] Client.Test (0 ms)
+[----------] 1 test from Client (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"unit_tests" end time: Dec 23 23:29 UTC
+"unit_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 23 23:29 UTC

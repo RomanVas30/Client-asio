@@ -1,0 +1,480 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/bind/storage.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef BOOST_BIND_STORAGE_HPP_INCLUDED
+        -:    2:#define BOOST_BIND_STORAGE_HPP_INCLUDED
+        -:    3:
+        -:    4:// MS compatible compilers support #pragma once
+        -:    5:
+        -:    6:#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+        -:    7:# pragma once
+        -:    8:#endif
+        -:    9:
+        -:   10://
+        -:   11://  bind/storage.hpp
+        -:   12://
+        -:   13://  boost/bind.hpp support header, optimized storage
+        -:   14://
+        -:   15://  Copyright (c) 2006 Peter Dimov
+        -:   16://
+        -:   17://  Distributed under the Boost Software License, Version 1.0.
+        -:   18://  See accompanying file LICENSE_1_0.txt or copy at
+        -:   19://  http://www.boost.org/LICENSE_1_0.txt
+        -:   20://
+        -:   21://  See http://www.boost.org/libs/bind/bind.html for documentation.
+        -:   22://
+        -:   23:
+        -:   24:#include <boost/config.hpp>
+        -:   25:#include <boost/bind/arg.hpp>
+        -:   26:
+        -:   27:#ifdef BOOST_MSVC
+        -:   28:# pragma warning(push)
+        -:   29:# pragma warning(disable: 4512) // assignment operator could not be generated
+        -:   30:#endif
+        -:   31:
+        -:   32:namespace boost
+        -:   33:{
+        -:   34:
+        -:   35:namespace _bi
+        -:   36:{
+        -:   37:
+        -:   38:// 1
+        -:   39:
+        -:   40:template<class A1> struct storage1
+        -:   41:{
+    #####:   42:    explicit storage1( A1 a1 ): a1_( a1 ) {}
+        -:   43:
+        -:   44:    template<class V> void accept(V & v) const
+        -:   45:    {
+        -:   46:        BOOST_BIND_VISIT_EACH(v, a1_, 0);
+        -:   47:    }
+        -:   48:
+        -:   49:    A1 a1_;
+        -:   50:};
+        -:   51:
+        -:   52:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION ) && !defined( __BORLANDC__ )
+        -:   53:
+        -:   54:template<int I> struct storage1< boost::arg<I> >
+        -:   55:{
+        -:   56:    explicit storage1( boost::arg<I> ) {}
+        -:   57:
+        -:   58:    template<class V> void accept(V &) const { }
+        -:   59:
+        -:   60:    static boost::arg<I> a1_() { return boost::arg<I>(); }
+        -:   61:};
+        -:   62:
+        -:   63:template<int I> struct storage1< boost::arg<I> (*) () >
+        -:   64:{
+        -:   65:    explicit storage1( boost::arg<I> (*) () ) {}
+        -:   66:
+        -:   67:    template<class V> void accept(V &) const { }
+        -:   68:
+        -:   69:    static boost::arg<I> a1_() { return boost::arg<I>(); }
+        -:   70:};
+        -:   71:
+        -:   72:#endif
+        -:   73:
+        -:   74:// 2
+        -:   75:
+        -:   76:template<class A1, class A2> struct storage2: public storage1<A1>
+        -:   77:{
+        -:   78:    typedef storage1<A1> inherited;
+        -:   79:
+        -:   80:    storage2( A1 a1, A2 a2 ): storage1<A1>( a1 ), a2_( a2 ) {}
+        -:   81:
+        -:   82:    template<class V> void accept(V & v) const
+        -:   83:    {
+        -:   84:        inherited::accept(v);
+        -:   85:        BOOST_BIND_VISIT_EACH(v, a2_, 0);
+        -:   86:    }
+        -:   87:
+        -:   88:    A2 a2_;
+        -:   89:};
+        -:   90:
+        -:   91:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:   92:
+        -:   93:template<class A1, int I> struct storage2< A1, boost::arg<I> >: public storage1<A1>
+        -:   94:{
+        -:   95:    typedef storage1<A1> inherited;
+        -:   96:
+    #####:   97:    storage2( A1 a1, boost::arg<I> ): storage1<A1>( a1 ) {}
+        -:   98:
+        -:   99:    template<class V> void accept(V & v) const
+        -:  100:    {
+        -:  101:        inherited::accept(v);
+        -:  102:    }
+        -:  103:
+    #####:  104:    static boost::arg<I> a2_() { return boost::arg<I>(); }
+        -:  105:};
+        -:  106:
+        -:  107:template<class A1, int I> struct storage2< A1, boost::arg<I> (*) () >: public storage1<A1>
+        -:  108:{
+        -:  109:    typedef storage1<A1> inherited;
+        -:  110:
+        -:  111:    storage2( A1 a1, boost::arg<I> (*) () ): storage1<A1>( a1 ) {}
+        -:  112:
+        -:  113:    template<class V> void accept(V & v) const
+        -:  114:    {
+        -:  115:        inherited::accept(v);
+        -:  116:    }
+        -:  117:
+        -:  118:    static boost::arg<I> a2_() { return boost::arg<I>(); }
+        -:  119:};
+        -:  120:
+        -:  121:#endif
+        -:  122:
+        -:  123:// 3
+        -:  124:
+        -:  125:template<class A1, class A2, class A3> struct storage3: public storage2< A1, A2 >
+        -:  126:{
+        -:  127:    typedef storage2<A1, A2> inherited;
+        -:  128:
+        -:  129:    storage3( A1 a1, A2 a2, A3 a3 ): storage2<A1, A2>( a1, a2 ), a3_( a3 ) {}
+        -:  130:
+        -:  131:    template<class V> void accept(V & v) const
+        -:  132:    {
+        -:  133:        inherited::accept(v);
+        -:  134:        BOOST_BIND_VISIT_EACH(v, a3_, 0);
+        -:  135:    }
+        -:  136:
+        -:  137:    A3 a3_;
+        -:  138:};
+        -:  139:
+        -:  140:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  141:
+        -:  142:template<class A1, class A2, int I> struct storage3< A1, A2, boost::arg<I> >: public storage2< A1, A2 >
+        -:  143:{
+        -:  144:    typedef storage2<A1, A2> inherited;
+        -:  145:
+        -:  146:    storage3( A1 a1, A2 a2, boost::arg<I> ): storage2<A1, A2>( a1, a2 ) {}
+        -:  147:
+        -:  148:    template<class V> void accept(V & v) const
+        -:  149:    {
+        -:  150:        inherited::accept(v);
+        -:  151:    }
+        -:  152:
+        -:  153:    static boost::arg<I> a3_() { return boost::arg<I>(); }
+        -:  154:};
+        -:  155:
+        -:  156:template<class A1, class A2, int I> struct storage3< A1, A2, boost::arg<I> (*) () >: public storage2< A1, A2 >
+        -:  157:{
+        -:  158:    typedef storage2<A1, A2> inherited;
+        -:  159:
+        -:  160:    storage3( A1 a1, A2 a2, boost::arg<I> (*) () ): storage2<A1, A2>( a1, a2 ) {}
+        -:  161:
+        -:  162:    template<class V> void accept(V & v) const
+        -:  163:    {
+        -:  164:        inherited::accept(v);
+        -:  165:    }
+        -:  166:
+        -:  167:    static boost::arg<I> a3_() { return boost::arg<I>(); }
+        -:  168:};
+        -:  169:
+        -:  170:#endif
+        -:  171:
+        -:  172:// 4
+        -:  173:
+        -:  174:template<class A1, class A2, class A3, class A4> struct storage4: public storage3< A1, A2, A3 >
+        -:  175:{
+        -:  176:    typedef storage3<A1, A2, A3> inherited;
+        -:  177:
+        -:  178:    storage4( A1 a1, A2 a2, A3 a3, A4 a4 ): storage3<A1, A2, A3>( a1, a2, a3 ), a4_( a4 ) {}
+        -:  179:
+        -:  180:    template<class V> void accept(V & v) const
+        -:  181:    {
+        -:  182:        inherited::accept(v);
+        -:  183:        BOOST_BIND_VISIT_EACH(v, a4_, 0);
+        -:  184:    }
+        -:  185:
+        -:  186:    A4 a4_;
+        -:  187:};
+        -:  188:
+        -:  189:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  190:
+        -:  191:template<class A1, class A2, class A3, int I> struct storage4< A1, A2, A3, boost::arg<I> >: public storage3< A1, A2, A3 >
+        -:  192:{
+        -:  193:    typedef storage3<A1, A2, A3> inherited;
+        -:  194:
+        -:  195:    storage4( A1 a1, A2 a2, A3 a3, boost::arg<I> ): storage3<A1, A2, A3>( a1, a2, a3 ) {}
+        -:  196:
+        -:  197:    template<class V> void accept(V & v) const
+        -:  198:    {
+        -:  199:        inherited::accept(v);
+        -:  200:    }
+        -:  201:
+        -:  202:    static boost::arg<I> a4_() { return boost::arg<I>(); }
+        -:  203:};
+        -:  204:
+        -:  205:template<class A1, class A2, class A3, int I> struct storage4< A1, A2, A3, boost::arg<I> (*) () >: public storage3< A1, A2, A3 >
+        -:  206:{
+        -:  207:    typedef storage3<A1, A2, A3> inherited;
+        -:  208:
+        -:  209:    storage4( A1 a1, A2 a2, A3 a3, boost::arg<I> (*) () ): storage3<A1, A2, A3>( a1, a2, a3 ) {}
+        -:  210:
+        -:  211:    template<class V> void accept(V & v) const
+        -:  212:    {
+        -:  213:        inherited::accept(v);
+        -:  214:    }
+        -:  215:
+        -:  216:    static boost::arg<I> a4_() { return boost::arg<I>(); }
+        -:  217:};
+        -:  218:
+        -:  219:#endif
+        -:  220:
+        -:  221:// 5
+        -:  222:
+        -:  223:template<class A1, class A2, class A3, class A4, class A5> struct storage5: public storage4< A1, A2, A3, A4 >
+        -:  224:{
+        -:  225:    typedef storage4<A1, A2, A3, A4> inherited;
+        -:  226:
+        -:  227:    storage5( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5 ): storage4<A1, A2, A3, A4>( a1, a2, a3, a4 ), a5_( a5 ) {}
+        -:  228:
+        -:  229:    template<class V> void accept(V & v) const
+        -:  230:    {
+        -:  231:        inherited::accept(v);
+        -:  232:        BOOST_BIND_VISIT_EACH(v, a5_, 0);
+        -:  233:    }
+        -:  234:
+        -:  235:    A5 a5_;
+        -:  236:};
+        -:  237:
+        -:  238:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  239:
+        -:  240:template<class A1, class A2, class A3, class A4, int I> struct storage5< A1, A2, A3, A4, boost::arg<I> >: public storage4< A1, A2, A3, A4 >
+        -:  241:{
+        -:  242:    typedef storage4<A1, A2, A3, A4> inherited;
+        -:  243:
+        -:  244:    storage5( A1 a1, A2 a2, A3 a3, A4 a4, boost::arg<I> ): storage4<A1, A2, A3, A4>( a1, a2, a3, a4 ) {}
+        -:  245:
+        -:  246:    template<class V> void accept(V & v) const
+        -:  247:    {
+        -:  248:        inherited::accept(v);
+        -:  249:    }
+        -:  250:
+        -:  251:    static boost::arg<I> a5_() { return boost::arg<I>(); }
+        -:  252:};
+        -:  253:
+        -:  254:template<class A1, class A2, class A3, class A4, int I> struct storage5< A1, A2, A3, A4, boost::arg<I> (*) () >: public storage4< A1, A2, A3, A4 >
+        -:  255:{
+        -:  256:    typedef storage4<A1, A2, A3, A4> inherited;
+        -:  257:
+        -:  258:    storage5( A1 a1, A2 a2, A3 a3, A4 a4, boost::arg<I> (*) () ): storage4<A1, A2, A3, A4>( a1, a2, a3, a4 ) {}
+        -:  259:
+        -:  260:    template<class V> void accept(V & v) const
+        -:  261:    {
+        -:  262:        inherited::accept(v);
+        -:  263:    }
+        -:  264:
+        -:  265:    static boost::arg<I> a5_() { return boost::arg<I>(); }
+        -:  266:};
+        -:  267:
+        -:  268:#endif
+        -:  269:
+        -:  270:// 6
+        -:  271:
+        -:  272:template<class A1, class A2, class A3, class A4, class A5, class A6> struct storage6: public storage5< A1, A2, A3, A4, A5 >
+        -:  273:{
+        -:  274:    typedef storage5<A1, A2, A3, A4, A5> inherited;
+        -:  275:
+        -:  276:    storage6( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6 ): storage5<A1, A2, A3, A4, A5>( a1, a2, a3, a4, a5 ), a6_( a6 ) {}
+        -:  277:
+        -:  278:    template<class V> void accept(V & v) const
+        -:  279:    {
+        -:  280:        inherited::accept(v);
+        -:  281:        BOOST_BIND_VISIT_EACH(v, a6_, 0);
+        -:  282:    }
+        -:  283:
+        -:  284:    A6 a6_;
+        -:  285:};
+        -:  286:
+        -:  287:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  288:
+        -:  289:template<class A1, class A2, class A3, class A4, class A5, int I> struct storage6< A1, A2, A3, A4, A5, boost::arg<I> >: public storage5< A1, A2, A3, A4, A5 >
+        -:  290:{
+        -:  291:    typedef storage5<A1, A2, A3, A4, A5> inherited;
+        -:  292:
+        -:  293:    storage6( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, boost::arg<I> ): storage5<A1, A2, A3, A4, A5>( a1, a2, a3, a4, a5 ) {}
+        -:  294:
+        -:  295:    template<class V> void accept(V & v) const
+        -:  296:    {
+        -:  297:        inherited::accept(v);
+        -:  298:    }
+        -:  299:
+        -:  300:    static boost::arg<I> a6_() { return boost::arg<I>(); }
+        -:  301:};
+        -:  302:
+        -:  303:template<class A1, class A2, class A3, class A4, class A5, int I> struct storage6< A1, A2, A3, A4, A5, boost::arg<I> (*) () >: public storage5< A1, A2, A3, A4, A5 >
+        -:  304:{
+        -:  305:    typedef storage5<A1, A2, A3, A4, A5> inherited;
+        -:  306:
+        -:  307:    storage6( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, boost::arg<I> (*) () ): storage5<A1, A2, A3, A4, A5>( a1, a2, a3, a4, a5 ) {}
+        -:  308:
+        -:  309:    template<class V> void accept(V & v) const
+        -:  310:    {
+        -:  311:        inherited::accept(v);
+        -:  312:    }
+        -:  313:
+        -:  314:    static boost::arg<I> a6_() { return boost::arg<I>(); }
+        -:  315:};
+        -:  316:
+        -:  317:#endif
+        -:  318:
+        -:  319:// 7
+        -:  320:
+        -:  321:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7> struct storage7: public storage6< A1, A2, A3, A4, A5, A6 >
+        -:  322:{
+        -:  323:    typedef storage6<A1, A2, A3, A4, A5, A6> inherited;
+        -:  324:
+        -:  325:    storage7( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7 ): storage6<A1, A2, A3, A4, A5, A6>( a1, a2, a3, a4, a5, a6 ), a7_( a7 ) {}
+        -:  326:
+        -:  327:    template<class V> void accept(V & v) const
+        -:  328:    {
+        -:  329:        inherited::accept(v);
+        -:  330:        BOOST_BIND_VISIT_EACH(v, a7_, 0);
+        -:  331:    }
+        -:  332:
+        -:  333:    A7 a7_;
+        -:  334:};
+        -:  335:
+        -:  336:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  337:
+        -:  338:template<class A1, class A2, class A3, class A4, class A5, class A6, int I> struct storage7< A1, A2, A3, A4, A5, A6, boost::arg<I> >: public storage6< A1, A2, A3, A4, A5, A6 >
+        -:  339:{
+        -:  340:    typedef storage6<A1, A2, A3, A4, A5, A6> inherited;
+        -:  341:
+        -:  342:    storage7( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, boost::arg<I> ): storage6<A1, A2, A3, A4, A5, A6>( a1, a2, a3, a4, a5, a6 ) {}
+        -:  343:
+        -:  344:    template<class V> void accept(V & v) const
+        -:  345:    {
+        -:  346:        inherited::accept(v);
+        -:  347:    }
+        -:  348:
+        -:  349:    static boost::arg<I> a7_() { return boost::arg<I>(); }
+        -:  350:};
+        -:  351:
+        -:  352:template<class A1, class A2, class A3, class A4, class A5, class A6, int I> struct storage7< A1, A2, A3, A4, A5, A6, boost::arg<I> (*) () >: public storage6< A1, A2, A3, A4, A5, A6 >
+        -:  353:{
+        -:  354:    typedef storage6<A1, A2, A3, A4, A5, A6> inherited;
+        -:  355:
+        -:  356:    storage7( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, boost::arg<I> (*) () ): storage6<A1, A2, A3, A4, A5, A6>( a1, a2, a3, a4, a5, a6 ) {}
+        -:  357:
+        -:  358:    template<class V> void accept(V & v) const
+        -:  359:    {
+        -:  360:        inherited::accept(v);
+        -:  361:    }
+        -:  362:
+        -:  363:    static boost::arg<I> a7_() { return boost::arg<I>(); }
+        -:  364:};
+        -:  365:
+        -:  366:#endif
+        -:  367:
+        -:  368:// 8
+        -:  369:
+        -:  370:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8> struct storage8: public storage7< A1, A2, A3, A4, A5, A6, A7 >
+        -:  371:{
+        -:  372:    typedef storage7<A1, A2, A3, A4, A5, A6, A7> inherited;
+        -:  373:
+        -:  374:    storage8( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8 ): storage7<A1, A2, A3, A4, A5, A6, A7>( a1, a2, a3, a4, a5, a6, a7 ), a8_( a8 ) {}
+        -:  375:
+        -:  376:    template<class V> void accept(V & v) const
+        -:  377:    {
+        -:  378:        inherited::accept(v);
+        -:  379:        BOOST_BIND_VISIT_EACH(v, a8_, 0);
+        -:  380:    }
+        -:  381:
+        -:  382:    A8 a8_;
+        -:  383:};
+        -:  384:
+        -:  385:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  386:
+        -:  387:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, int I> struct storage8< A1, A2, A3, A4, A5, A6, A7, boost::arg<I> >: public storage7< A1, A2, A3, A4, A5, A6, A7 >
+        -:  388:{
+        -:  389:    typedef storage7<A1, A2, A3, A4, A5, A6, A7> inherited;
+        -:  390:
+        -:  391:    storage8( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, boost::arg<I> ): storage7<A1, A2, A3, A4, A5, A6, A7>( a1, a2, a3, a4, a5, a6, a7 ) {}
+        -:  392:
+        -:  393:    template<class V> void accept(V & v) const
+        -:  394:    {
+        -:  395:        inherited::accept(v);
+        -:  396:    }
+        -:  397:
+        -:  398:    static boost::arg<I> a8_() { return boost::arg<I>(); }
+        -:  399:};
+        -:  400:
+        -:  401:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, int I> struct storage8< A1, A2, A3, A4, A5, A6, A7, boost::arg<I> (*) () >: public storage7< A1, A2, A3, A4, A5, A6, A7 >
+        -:  402:{
+        -:  403:    typedef storage7<A1, A2, A3, A4, A5, A6, A7> inherited;
+        -:  404:
+        -:  405:    storage8( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, boost::arg<I> (*) () ): storage7<A1, A2, A3, A4, A5, A6, A7>( a1, a2, a3, a4, a5, a6, a7 ) {}
+        -:  406:
+        -:  407:    template<class V> void accept(V & v) const
+        -:  408:    {
+        -:  409:        inherited::accept(v);
+        -:  410:    }
+        -:  411:
+        -:  412:    static boost::arg<I> a8_() { return boost::arg<I>(); }
+        -:  413:};
+        -:  414:
+        -:  415:#endif
+        -:  416:
+        -:  417:// 9
+        -:  418:
+        -:  419:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9> struct storage9: public storage8< A1, A2, A3, A4, A5, A6, A7, A8 >
+        -:  420:{
+        -:  421:    typedef storage8<A1, A2, A3, A4, A5, A6, A7, A8> inherited;
+        -:  422:
+        -:  423:    storage9( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9 ): storage8<A1, A2, A3, A4, A5, A6, A7, A8>( a1, a2, a3, a4, a5, a6, a7, a8 ), a9_( a9 ) {}
+        -:  424:
+        -:  425:    template<class V> void accept(V & v) const
+        -:  426:    {
+        -:  427:        inherited::accept(v);
+        -:  428:        BOOST_BIND_VISIT_EACH(v, a9_, 0);
+        -:  429:    }
+        -:  430:
+        -:  431:    A9 a9_;
+        -:  432:};
+        -:  433:
+        -:  434:#if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+        -:  435:
+        -:  436:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, int I> struct storage9< A1, A2, A3, A4, A5, A6, A7, A8, boost::arg<I> >: public storage8< A1, A2, A3, A4, A5, A6, A7, A8 >
+        -:  437:{
+        -:  438:    typedef storage8<A1, A2, A3, A4, A5, A6, A7, A8> inherited;
+        -:  439:
+        -:  440:    storage9( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, boost::arg<I> ): storage8<A1, A2, A3, A4, A5, A6, A7, A8>( a1, a2, a3, a4, a5, a6, a7, a8 ) {}
+        -:  441:
+        -:  442:    template<class V> void accept(V & v) const
+        -:  443:    {
+        -:  444:        inherited::accept(v);
+        -:  445:    }
+        -:  446:
+        -:  447:    static boost::arg<I> a9_() { return boost::arg<I>(); }
+        -:  448:};
+        -:  449:
+        -:  450:template<class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, int I> struct storage9< A1, A2, A3, A4, A5, A6, A7, A8, boost::arg<I> (*) () >: public storage8< A1, A2, A3, A4, A5, A6, A7, A8 >
+        -:  451:{
+        -:  452:    typedef storage8<A1, A2, A3, A4, A5, A6, A7, A8> inherited;
+        -:  453:
+        -:  454:    storage9( A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, boost::arg<I> (*) () ): storage8<A1, A2, A3, A4, A5, A6, A7, A8>( a1, a2, a3, a4, a5, a6, a7, a8 ) {}
+        -:  455:
+        -:  456:    template<class V> void accept(V & v) const
+        -:  457:    {
+        -:  458:        inherited::accept(v);
+        -:  459:    }
+        -:  460:
+        -:  461:    static boost::arg<I> a9_() { return boost::arg<I>(); }
+        -:  462:};
+        -:  463:
+        -:  464:#endif
+        -:  465:
+        -:  466:} // namespace _bi
+        -:  467:
+        -:  468:} // namespace boost
+        -:  469:
+        -:  470:#ifdef BOOST_MSVC
+        -:  471:# pragma warning(default: 4512) // assignment operator could not be generated
+        -:  472:# pragma warning(pop)
+        -:  473:#endif
+        -:  474:
+        -:  475:#endif // #ifndef BOOST_BIND_STORAGE_HPP_INCLUDED

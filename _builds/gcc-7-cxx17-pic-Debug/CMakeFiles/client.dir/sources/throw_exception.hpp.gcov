@@ -1,0 +1,107 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/throw_exception.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef UUID_AA15E74A856F11E08B8D93F24824019B
+        -:    2:#define UUID_AA15E74A856F11E08B8D93F24824019B
+        -:    3:#if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+        -:    4:#pragma GCC system_header
+        -:    5:#endif
+        -:    6:#if defined(_MSC_VER) && !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+        -:    7:#pragma warning(push,1)
+        -:    8:#endif
+        -:    9:
+        -:   10:// MS compatible compilers support #pragma once
+        -:   11:
+        -:   12:#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+        -:   13:# pragma once
+        -:   14:#endif
+        -:   15:
+        -:   16://
+        -:   17://  boost/throw_exception.hpp
+        -:   18://
+        -:   19://  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
+        -:   20://  Copyright (c) 2008-2009 Emil Dotchevski and Reverge Studios, Inc.
+        -:   21://
+        -:   22://  Distributed under the Boost Software License, Version 1.0. (See
+        -:   23://  accompanying file LICENSE_1_0.txt or copy at
+        -:   24://  http://www.boost.org/LICENSE_1_0.txt)
+        -:   25://
+        -:   26://  http://www.boost.org/libs/utility/throw_exception.html
+        -:   27://
+        -:   28:
+        -:   29:#include <boost/detail/workaround.hpp>
+        -:   30:#include <boost/config.hpp>
+        -:   31:#include <exception>
+        -:   32:
+        -:   33:#if !defined( BOOST_EXCEPTION_DISABLE ) && defined( __BORLANDC__ ) && BOOST_WORKAROUND( __BORLANDC__, BOOST_TESTED_AT(0x593) )
+        -:   34:# define BOOST_EXCEPTION_DISABLE
+        -:   35:#endif
+        -:   36:
+        -:   37:#if !defined( BOOST_EXCEPTION_DISABLE ) && defined( BOOST_MSVC ) && BOOST_WORKAROUND( BOOST_MSVC, < 1310 )
+        -:   38:# define BOOST_EXCEPTION_DISABLE
+        -:   39:#endif
+        -:   40:
+        -:   41:#if !defined( BOOST_EXCEPTION_DISABLE )
+        -:   42:# include <boost/exception/exception.hpp>
+        -:   43:#if !defined(BOOST_THROW_EXCEPTION_CURRENT_FUNCTION)
+        -:   44:# include <boost/current_function.hpp>
+        -:   45:# define BOOST_THROW_EXCEPTION_CURRENT_FUNCTION BOOST_CURRENT_FUNCTION
+        -:   46:#endif
+        -:   47:# define BOOST_THROW_EXCEPTION(x) ::boost::exception_detail::throw_exception_(x,BOOST_THROW_EXCEPTION_CURRENT_FUNCTION,__FILE__,__LINE__)
+        -:   48:#else
+        -:   49:# define BOOST_THROW_EXCEPTION(x) ::boost::throw_exception(x)
+        -:   50:#endif
+        -:   51:
+        -:   52:namespace boost
+        -:   53:{
+        -:   54:#ifdef BOOST_NO_EXCEPTIONS
+        -:   55:
+        -:   56:void throw_exception( std::exception const & e ); // user defined
+        -:   57:
+        -:   58:#else
+        -:   59:
+    #####:   60:inline void throw_exception_assert_compatibility( std::exception const & ) { }
+        -:   61:
+    #####:   62:template<class E> BOOST_NORETURN inline void throw_exception( E const & e )
+        -:   63:{
+        -:   64:    //All boost exceptions are required to derive from std::exception,
+        -:   65:    //to ensure compatibility with BOOST_NO_EXCEPTIONS.
+    #####:   66:    throw_exception_assert_compatibility(e);
+        -:   67:
+        -:   68:#ifndef BOOST_EXCEPTION_DISABLE
+    #####:   69:    throw enable_current_exception(enable_error_info(e));
+        -:   70:#else
+        -:   71:    throw e;
+        -:   72:#endif
+        -:   73:}
+        -:   74:
+        -:   75:#endif
+        -:   76:
+        -:   77:#if !defined( BOOST_EXCEPTION_DISABLE )
+        -:   78:    namespace
+        -:   79:    exception_detail
+        -:   80:    {
+        -:   81:        template <class E>
+        -:   82:        BOOST_NORETURN
+        -:   83:        void
+        -:   84:        throw_exception_( E const & x, char const * current_function, char const * file, int line )
+        -:   85:        {
+        -:   86:            boost::throw_exception(
+        -:   87:                set_info(
+        -:   88:                    set_info(
+        -:   89:                        set_info(
+        -:   90:                            enable_error_info(x),
+        -:   91:                            throw_function(current_function)),
+        -:   92:                        throw_file(file)),
+        -:   93:                    throw_line(line)));
+        -:   94:        }
+        -:   95:    }
+        -:   96:#endif
+        -:   97:} // namespace boost
+        -:   98:
+        -:   99:#if defined(_MSC_VER) && !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+        -:  100:#pragma warning(pop)
+        -:  101:#endif
+        -:  102:#endif

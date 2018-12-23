@@ -1,0 +1,222 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/move/default_delete.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/main.cpp.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1://////////////////////////////////////////////////////////////////////////////
+        -:    2://
+        -:    3:// (C) Copyright Ion Gaztanaga 2014-2014. Distributed under the Boost
+        -:    4:// Software License, Version 1.0. (See accompanying file
+        -:    5:// LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    6://
+        -:    7:// See http://www.boost.org/libs/move for documentation.
+        -:    8://
+        -:    9://////////////////////////////////////////////////////////////////////////////
+        -:   10:
+        -:   11:#ifndef BOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
+        -:   12:#define BOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
+        -:   13:
+        -:   14:#ifndef BOOST_CONFIG_HPP
+        -:   15:#  include <boost/config.hpp>
+        -:   16:#endif
+        -:   17:#
+        -:   18:#if defined(BOOST_HAS_PRAGMA_ONCE)
+        -:   19:#  pragma once
+        -:   20:#endif
+        -:   21:
+        -:   22:#include <boost/move/detail/config_begin.hpp>
+        -:   23:#include <boost/move/detail/workaround.hpp>
+        -:   24:#include <boost/move/detail/unique_ptr_meta_utils.hpp>
+        -:   25:#include <boost/move/utility_core.hpp>
+        -:   26:#include <boost/static_assert.hpp>
+        -:   27:
+        -:   28:#include <cstddef>   //For std::size_t,std::nullptr_t
+        -:   29:
+        -:   30://!\file
+        -:   31://! Describes the default deleter (destruction policy) of <tt>unique_ptr</tt>: <tt>default_delete</tt>.
+        -:   32:
+        -:   33:namespace boost{
+        -:   34:// @cond
+        -:   35:namespace move_upd {
+        -:   36:
+        -:   37:namespace bmupmu = ::boost::move_upmu;
+        -:   38:
+        -:   39:////////////////////////////////////////
+        -:   40:////        enable_def_del
+        -:   41:////////////////////////////////////////
+        -:   42:
+        -:   43://compatible with a pointer type T*:
+        -:   44://When either Y* is convertible to T*
+        -:   45://Y is U[N] and T is U cv []
+        -:   46:template<class U, class T>
+        -:   47:struct def_del_compatible_cond
+        -:   48:   : bmupmu::is_convertible<U*, T*>
+        -:   49:{};
+        -:   50:
+        -:   51:template<class U, class T, std::size_t N>
+        -:   52:struct def_del_compatible_cond<U[N], T[]>
+        -:   53:   : def_del_compatible_cond<U[], T[]>
+        -:   54:{};
+        -:   55:
+        -:   56:template<class U, class T, class Type = bmupmu::nat>
+        -:   57:struct enable_def_del
+        -:   58:   : bmupmu::enable_if_c<def_del_compatible_cond<U, T>::value, Type>
+        -:   59:{};
+        -:   60:
+        -:   61:////////////////////////////////////////
+        -:   62:////        enable_defdel_call
+        -:   63:////////////////////////////////////////
+        -:   64:
+        -:   65://When 2nd is T[N], 1st(*)[N] shall be convertible to T(*)[N]; 
+        -:   66://When 2nd is T[],  1st(*)[] shall be convertible to T(*)[]; 
+        -:   67://Otherwise, 1st* shall be convertible to 2nd*.
+        -:   68:
+        -:   69:template<class U, class T, class Type = bmupmu::nat>
+        -:   70:struct enable_defdel_call
+        -:   71:   : public enable_def_del<U, T, Type>
+        -:   72:{};
+        -:   73:
+        -:   74:template<class U, class T, class Type>
+        -:   75:struct enable_defdel_call<U, T[], Type>
+        -:   76:   : public enable_def_del<U[], T[], Type>
+        -:   77:{};
+        -:   78:
+        -:   79:template<class U, class T, class Type, std::size_t N>
+        -:   80:struct enable_defdel_call<U, T[N], Type>
+        -:   81:   : public enable_def_del<U[N], T[N], Type>
+        -:   82:{};
+        -:   83:
+        -:   84:////////////////////////////////////////
+        -:   85:////     Some bool literal zero conversion utilities
+        -:   86:////////////////////////////////////////
+        -:   87:
+        -:   88:struct bool_conversion {int for_bool; int for_arg(); };
+        -:   89:typedef int bool_conversion::* explicit_bool_arg;
+        -:   90:
+        -:   91:#if !defined(BOOST_NO_CXX11_NULLPTR) && !defined(BOOST_NO_CXX11_DECLTYPE)
+        -:   92:   typedef decltype(nullptr) nullptr_type;
+        -:   93:#elif !defined(BOOST_NO_CXX11_NULLPTR)
+        -:   94:   typedef std::nullptr_t nullptr_type;
+        -:   95:#else
+        -:   96:   typedef int (bool_conversion::*nullptr_type)();
+        -:   97:#endif
+        -:   98:
+        -:   99:template<bool B>
+        -:  100:struct is_array_del
+        -:  101:{};
+        -:  102:
+        -:  103:template<class T>
+        -:  104:void call_delete(T *p, is_array_del<true>)
+        -:  105:{
+        -:  106:   delete [] p;
+        -:  107:}
+        -:  108:
+        -:  109:template<class T>
+    #####:  110:void call_delete(T *p, is_array_del<false>)
+        -:  111:{
+    #####:  112:   delete p;
+    #####:  113:}
+        -:  114:
+        -:  115:}  //namespace move_upd {
+        -:  116:// @endcond
+        -:  117:
+        -:  118:namespace movelib {
+        -:  119:
+        -:  120:namespace bmupd = boost::move_upd;
+        -:  121:namespace bmupmu = ::boost::move_upmu;
+        -:  122:
+        -:  123://!The class template <tt>default_delete</tt> serves as the default deleter
+        -:  124://!(destruction policy) for the class template <tt>unique_ptr</tt>.
+        -:  125://!
+        -:  126://! \tparam T The type to be deleted. It may be an incomplete type
+        -:  127:template <class T>
+        -:  128:struct default_delete
+        -:  129:{
+        -:  130:   //! Default constructor.
+        -:  131:   //!
+        -:  132:   BOOST_CONSTEXPR default_delete()
+        -:  133:   //Avoid "defaulted on its first declaration must not have an exception-specification" error for GCC 4.6
+        -:  134:   #if !defined(BOOST_GCC) || (BOOST_GCC < 40600 && BOOST_GCC >= 40700) || defined(BOOST_MOVE_DOXYGEN_INVOKED)
+        -:  135:   BOOST_NOEXCEPT
+        -:  136:   #endif
+        -:  137:   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_MOVE_DOXYGEN_INVOKED)
+        -:  138:   = default;
+        -:  139:   #else
+        -:  140:   {};
+        -:  141:   #endif
+        -:  142:
+        -:  143:   #if defined(BOOST_MOVE_DOXYGEN_INVOKED)
+        -:  144:   //! Trivial copy constructor
+        -:  145:   //!
+        -:  146:   default_delete(const default_delete&) BOOST_NOEXCEPT = default;
+        -:  147:   //! Trivial assignment
+        -:  148:   //!
+        -:  149:   default_delete &operator=(const default_delete&) BOOST_NOEXCEPT = default;
+        -:  150:   #else
+        -:  151:   typedef typename bmupmu::remove_extent<T>::type element_type;
+        -:  152:   #endif
+        -:  153:
+        -:  154:   //! <b>Effects</b>: Constructs a default_delete object from another <tt>default_delete<U></tt> object.
+        -:  155:   //!
+        -:  156:   //! <b>Remarks</b>: This constructor shall not participate in overload resolution unless:
+        -:  157:   //!   - If T is not an array type and U* is implicitly convertible to T*.
+        -:  158:   //!   - If T is an array type and U* is a more CV qualified pointer to remove_extent<T>::type.
+        -:  159:   template <class U>
+        -:  160:   default_delete(const default_delete<U>&
+        -:  161:      BOOST_MOVE_DOCIGN(BOOST_MOVE_I typename bmupd::enable_def_del<U BOOST_MOVE_I T>::type* =0)
+        -:  162:      ) BOOST_NOEXCEPT
+        -:  163:   {
+        -:  164:      //If T is not an array type, U derives from T
+        -:  165:      //and T has no virtual destructor, then you have a problem
+        -:  166:      BOOST_STATIC_ASSERT(( !::boost::move_upmu::missing_virtual_destructor<default_delete, U>::value ));
+        -:  167:   }
+        -:  168:
+        -:  169:   //! <b>Effects</b>: Constructs a default_delete object from another <tt>default_delete<U></tt> object.
+        -:  170:   //!
+        -:  171:   //! <b>Remarks</b>: This constructor shall not participate in overload resolution unless:
+        -:  172:   //!   - If T is not an array type and U* is implicitly convertible to T*.
+        -:  173:   //!   - If T is an array type and U* is a more CV qualified pointer to remove_extent<T>::type.
+        -:  174:   template <class U>
+        -:  175:   BOOST_MOVE_DOC1ST(default_delete&, 
+        -:  176:      typename bmupd::enable_def_del<U BOOST_MOVE_I T BOOST_MOVE_I default_delete &>::type)
+        -:  177:      operator=(const default_delete<U>&) BOOST_NOEXCEPT
+        -:  178:   {
+        -:  179:      //If T is not an array type, U derives from T
+        -:  180:      //and T has no virtual destructor, then you have a problem
+        -:  181:      BOOST_STATIC_ASSERT(( !::boost::move_upmu::missing_virtual_destructor<default_delete, U>::value ));
+        -:  182:      return *this;
+        -:  183:   }
+        -:  184:
+        -:  185:   //! <b>Effects</b>: if T is not an array type, calls <tt>delete</tt> on static_cast<T*>(ptr),
+        -:  186:   //!   otherwise calls <tt>delete[]</tt> on static_cast<remove_extent<T>::type*>(ptr).
+        -:  187:   //!
+        -:  188:   //! <b>Remarks</b>: If U is an incomplete type, the program is ill-formed.
+        -:  189:   //!   This operator shall not participate in overload resolution unless:
+        -:  190:   //!      - T is not an array type and U* is convertible to T*, OR
+        -:  191:   //!      - T is an array type, and remove_cv<U>::type is the same type as
+        -:  192:   //!         remove_cv<remove_extent<T>::type>::type and U* is convertible to remove_extent<T>::type*.
+        -:  193:   template <class U>
+        -:  194:   BOOST_MOVE_DOC1ST(void, typename bmupd::enable_defdel_call<U BOOST_MOVE_I T BOOST_MOVE_I void>::type)
+    #####:  195:      operator()(U* ptr) const BOOST_NOEXCEPT
+        -:  196:   {
+        -:  197:      //U must be a complete type
+        -:  198:      BOOST_STATIC_ASSERT(sizeof(U) > 0);
+        -:  199:      //If T is not an array type, U derives from T
+        -:  200:      //and T has no virtual destructor, then you have a problem
+        -:  201:      BOOST_STATIC_ASSERT(( !::boost::move_upmu::missing_virtual_destructor<default_delete, U>::value ));
+    #####:  202:      element_type * const p = static_cast<element_type*>(ptr);
+    #####:  203:      move_upd::call_delete(p, move_upd::is_array_del<bmupmu::is_array<T>::value>());
+    #####:  204:   }
+        -:  205:
+        -:  206:   //! <b>Effects</b>: Same as <tt>(*this)(static_cast<element_type*>(nullptr))</tt>.
+        -:  207:   //!
+        -:  208:   void operator()(BOOST_MOVE_DOC0PTR(bmupd::nullptr_type)) const BOOST_NOEXCEPT
+        -:  209:   {  BOOST_STATIC_ASSERT(sizeof(element_type) > 0);  }
+        -:  210:};
+        -:  211:
+        -:  212:}  //namespace movelib {
+        -:  213:}  //namespace boost{
+        -:  214:
+        -:  215:#include <boost/move/detail/config_end.hpp>
+        -:  216:
+        -:  217:#endif   //#ifndef BOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED

@@ -1,0 +1,501 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/date_time/int_adapter.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef _DATE_TIME_INT_ADAPTER_HPP__
+        -:    2:#define _DATE_TIME_INT_ADAPTER_HPP__
+        -:    3:
+        -:    4:/* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+        -:    5: * Use, modification and distribution is subject to the 
+        -:    6: * Boost Software License, Version 1.0. (See accompanying
+        -:    7: * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+        -:    8: * Author: Jeff Garland, Bart Garst
+        -:    9: * $Date$
+        -:   10: */
+        -:   11:
+        -:   12:
+        -:   13:#include "boost/config.hpp"
+        -:   14:#include "boost/limits.hpp" //work around compilers without limits
+        -:   15:#include "boost/date_time/special_defs.hpp"
+        -:   16:#include "boost/date_time/locale_config.hpp"
+        -:   17:#ifndef BOOST_DATE_TIME_NO_LOCALE
+        -:   18:#  include <ostream>
+        -:   19:#endif
+        -:   20:
+        -:   21:#if defined(BOOST_MSVC)
+        -:   22:#pragma warning(push)
+        -:   23:// conditional expression is constant
+        -:   24:#pragma warning(disable: 4127)
+        -:   25:#endif
+        -:   26:
+        -:   27:namespace boost {
+        -:   28:namespace date_time {
+        -:   29:
+        -:   30:
+        -:   31://! Adapter to create integer types with +-infinity, and not a value
+        -:   32:/*! This class is used internally in counted date/time representations.
+        -:   33: *  It adds the floating point like features of infinities and
+        -:   34: *  not a number. It also provides mathmatical operations with
+        -:   35: *  consideration to special values following these rules:
+        -:   36: *@code
+        -:   37: *  +infinity  -  infinity  == Not A Number (NAN)
+        -:   38: *   infinity  *  non-zero  == infinity
+        -:   39: *   infinity  *  zero      == NAN
+        -:   40: *  +infinity  * -integer   == -infinity
+        -:   41: *   infinity  /  infinity  == NAN
+        -:   42: *   infinity  *  infinity  == infinity 
+        -:   43: *@endcode 
+        -:   44: */
+        -:   45:template<typename int_type_>
+        -:   46:class int_adapter {
+        -:   47:public:
+        -:   48:  typedef int_type_ int_type;
+    #####:   49:  int_adapter(int_type v) :
+    #####:   50:    value_(v)
+    #####:   51:  {}
+        -:   52:  static bool has_infinity()
+        -:   53:  {
+        -:   54:    return  true;
+        -:   55:  }
+    #####:   56:  static const int_adapter  pos_infinity()
+        -:   57:  {
+    #####:   58:    return (::std::numeric_limits<int_type>::max)();
+        -:   59:  }
+    #####:   60:  static const int_adapter  neg_infinity()
+        -:   61:  {
+    #####:   62:    return (::std::numeric_limits<int_type>::min)();
+        -:   63:  }
+    #####:   64:  static const int_adapter  not_a_number()
+        -:   65:  {
+    #####:   66:    return (::std::numeric_limits<int_type>::max)()-1;
+        -:   67:  }
+        -:   68:  static  int_adapter max BOOST_PREVENT_MACRO_SUBSTITUTION ()
+        -:   69:  {
+        -:   70:    return (::std::numeric_limits<int_type>::max)()-2;
+        -:   71:  }
+        -:   72:  static  int_adapter min BOOST_PREVENT_MACRO_SUBSTITUTION ()
+        -:   73:  {
+        -:   74:    return (::std::numeric_limits<int_type>::min)()+1;
+        -:   75:  }
+        -:   76:  static int_adapter from_special(special_values sv)
+        -:   77:  {
+        -:   78:    switch (sv) {
+        -:   79:    case not_a_date_time: return not_a_number();
+        -:   80:    case neg_infin:       return neg_infinity();
+        -:   81:    case pos_infin:       return pos_infinity();
+        -:   82:    case max_date_time:   return (max)();
+        -:   83:    case min_date_time:   return (min)();
+        -:   84:    default:              return not_a_number();
+        -:   85:    }
+        -:   86:  }
+        -:   87:  static bool is_inf(int_type v)
+        -:   88:  {
+        -:   89:    return (v == neg_infinity().as_number() ||
+        -:   90:            v == pos_infinity().as_number());
+        -:   91:  }
+        -:   92:  static bool is_neg_inf(int_type v)
+        -:   93:  {
+        -:   94:    return (v == neg_infinity().as_number());
+        -:   95:  }
+        -:   96:  static bool is_pos_inf(int_type v)
+        -:   97:  {
+        -:   98:    return (v == pos_infinity().as_number());
+        -:   99:  }
+        -:  100:  static bool is_not_a_number(int_type v)
+        -:  101:  {
+        -:  102:    return (v == not_a_number().as_number());
+        -:  103:  }
+        -:  104:  //! Returns either special value type or is_not_special
+        -:  105:  static special_values to_special(int_type v)
+        -:  106:  {
+        -:  107:    if (is_not_a_number(v)) return not_a_date_time;
+        -:  108:    if (is_neg_inf(v)) return neg_infin;
+        -:  109:    if (is_pos_inf(v)) return pos_infin;
+        -:  110:    return not_special;
+        -:  111:  }
+        -:  112:
+        -:  113:  //-3 leaves room for representations of infinity and not a date
+        -:  114:  static  int_type maxcount()
+        -:  115:  {
+        -:  116:    return (::std::numeric_limits<int_type>::max)()-3;
+        -:  117:  }
+    #####:  118:  bool is_infinity() const
+        -:  119:  {
+    #####:  120:    return (value_ == neg_infinity().as_number() ||
+    #####:  121:            value_ == pos_infinity().as_number());
+        -:  122:  }
+    #####:  123:  bool is_pos_infinity()const
+        -:  124:  {
+    #####:  125:    return(value_ == pos_infinity().as_number());
+        -:  126:  }
+        -:  127:  bool is_neg_infinity()const
+        -:  128:  {
+        -:  129:    return(value_ == neg_infinity().as_number());
+        -:  130:  }
+    #####:  131:  bool is_nan() const
+        -:  132:  {
+    #####:  133:    return (value_ == not_a_number().as_number());
+        -:  134:  }
+    #####:  135:  bool is_special() const
+        -:  136:  {
+    #####:  137:    return(is_infinity() || is_nan()); 
+        -:  138:  }
+        -:  139:  bool operator==(const int_adapter& rhs) const
+        -:  140:  {
+        -:  141:    return (compare(rhs) == 0);
+        -:  142:  }
+        -:  143:  bool operator==(const int& rhs) const
+        -:  144:  {
+        -:  145:    if(!std::numeric_limits<int_type>::is_signed)
+        -:  146:    {
+        -:  147:      if(is_neg_inf(value_) && rhs == 0)
+        -:  148:      {
+        -:  149:        return false;
+        -:  150:      }
+        -:  151:    }
+        -:  152:    return (compare(rhs) == 0);
+        -:  153:  }
+        -:  154:  bool operator!=(const int_adapter& rhs) const
+        -:  155:  {
+        -:  156:    return (compare(rhs) != 0);
+        -:  157:  }
+        -:  158:  bool operator!=(const int& rhs) const
+        -:  159:  {
+        -:  160:    if(!std::numeric_limits<int_type>::is_signed)
+        -:  161:    {
+        -:  162:      if(is_neg_inf(value_) && rhs == 0)
+        -:  163:      {
+        -:  164:        return true;
+        -:  165:      }
+        -:  166:    }
+        -:  167:    return (compare(rhs) != 0);
+        -:  168:  }
+        -:  169:  bool operator<(const int_adapter& rhs) const
+        -:  170:  {
+        -:  171:    return (compare(rhs) == -1);
+        -:  172:  }
+        -:  173:  bool operator<(const int& rhs) const
+        -:  174:  {
+        -:  175:    // quiets compiler warnings
+        -:  176:    if(!std::numeric_limits<int_type>::is_signed)
+        -:  177:    {
+        -:  178:      if(is_neg_inf(value_) && rhs == 0)
+        -:  179:      {
+        -:  180:        return true;
+        -:  181:      }
+        -:  182:    }
+        -:  183:    return (compare(rhs) == -1);
+        -:  184:  }
+        -:  185:  bool operator>(const int_adapter& rhs) const
+        -:  186:  {
+        -:  187:    return (compare(rhs) == 1);
+        -:  188:  }
+    #####:  189:  int_type as_number() const
+        -:  190:  {
+    #####:  191:    return value_;
+        -:  192:  }
+        -:  193:  //! Returns either special value type or is_not_special
+        -:  194:  special_values as_special() const
+        -:  195:  {
+        -:  196:    return int_adapter::to_special(value_);
+        -:  197:  }
+        -:  198:  //creates nasty ambiguities
+        -:  199://   operator int_type() const
+        -:  200://   {
+        -:  201://     return value_;
+        -:  202://   }
+        -:  203:
+        -:  204:  /*! Operator allows for adding dissimilar int_adapter types.
+        -:  205:   * The return type will match that of the the calling object's type */
+        -:  206:  template<class rhs_type>
+        -:  207:  inline
+        -:  208:  int_adapter operator+(const int_adapter<rhs_type>& rhs) const
+        -:  209:  {
+        -:  210:    if(is_special() || rhs.is_special())
+        -:  211:    {
+        -:  212:      if (is_nan() || rhs.is_nan()) 
+        -:  213:      {
+        -:  214:        return int_adapter::not_a_number();
+        -:  215:      }
+        -:  216:      if((is_pos_inf(value_) && rhs.is_neg_inf(rhs.as_number())) ||
+        -:  217:      (is_neg_inf(value_) && rhs.is_pos_inf(rhs.as_number())) )
+        -:  218:      {
+        -:  219:        return int_adapter::not_a_number();
+        -:  220:      }
+        -:  221:      if (is_infinity()) 
+        -:  222:      {
+        -:  223:        return *this;
+        -:  224:      }
+        -:  225:      if (rhs.is_pos_inf(rhs.as_number())) 
+        -:  226:      {
+        -:  227:        return int_adapter::pos_infinity();
+        -:  228:      }
+        -:  229:      if (rhs.is_neg_inf(rhs.as_number())) 
+        -:  230:      {
+        -:  231:        return int_adapter::neg_infinity();
+        -:  232:      }
+        -:  233:    }
+        -:  234:    return int_adapter<int_type>(value_ + static_cast<int_type>(rhs.as_number()));
+        -:  235:  }
+        -:  236:
+        -:  237:  int_adapter operator+(const int_type rhs) const
+        -:  238:  {
+        -:  239:    if(is_special())
+        -:  240:    {
+        -:  241:      if (is_nan()) 
+        -:  242:      {
+        -:  243:        return int_adapter<int_type>(not_a_number());
+        -:  244:      }
+        -:  245:      if (is_infinity()) 
+        -:  246:      {
+        -:  247:        return *this;
+        -:  248:      }
+        -:  249:    }
+        -:  250:    return int_adapter<int_type>(value_ + rhs);
+        -:  251:  }
+        -:  252:  
+        -:  253:  /*! Operator allows for subtracting dissimilar int_adapter types.
+        -:  254:   * The return type will match that of the the calling object's type */
+        -:  255:  template<class rhs_type>
+        -:  256:  inline
+        -:  257:  int_adapter operator-(const int_adapter<rhs_type>& rhs)const
+        -:  258:  {
+        -:  259:    if(is_special() || rhs.is_special())
+        -:  260:    {
+        -:  261:      if (is_nan() || rhs.is_nan()) 
+        -:  262:      {
+        -:  263:        return int_adapter::not_a_number();
+        -:  264:      }
+        -:  265:      if((is_pos_inf(value_) && rhs.is_pos_inf(rhs.as_number())) ||
+        -:  266:         (is_neg_inf(value_) && rhs.is_neg_inf(rhs.as_number())) )
+        -:  267:      {
+        -:  268:        return int_adapter::not_a_number();
+        -:  269:      }
+        -:  270:      if (is_infinity()) 
+        -:  271:      {
+        -:  272:        return *this;
+        -:  273:      }
+        -:  274:      if (rhs.is_pos_inf(rhs.as_number())) 
+        -:  275:      {
+        -:  276:        return int_adapter::neg_infinity();
+        -:  277:      }
+        -:  278:      if (rhs.is_neg_inf(rhs.as_number())) 
+        -:  279:      {
+        -:  280:        return int_adapter::pos_infinity();
+        -:  281:      }
+        -:  282:    }
+        -:  283:    return int_adapter<int_type>(value_ - static_cast<int_type>(rhs.as_number()));
+        -:  284:  }
+        -:  285:  int_adapter operator-(const int_type rhs) const
+        -:  286:  {
+        -:  287:    if(is_special())
+        -:  288:    {
+        -:  289:      if (is_nan()) 
+        -:  290:      {
+        -:  291:        return int_adapter<int_type>(not_a_number());
+        -:  292:      }
+        -:  293:      if (is_infinity()) 
+        -:  294:      {
+        -:  295:        return *this;
+        -:  296:      }
+        -:  297:    }
+        -:  298:    return int_adapter<int_type>(value_ - rhs);
+        -:  299:  }
+        -:  300:
+        -:  301:  // should templatize this to be consistant with op +-
+        -:  302:  int_adapter operator*(const int_adapter& rhs)const
+        -:  303:  {
+        -:  304:    if(this->is_special() || rhs.is_special())
+        -:  305:    {
+        -:  306:      return mult_div_specials(rhs);
+        -:  307:    }
+        -:  308:    return int_adapter<int_type>(value_ * rhs.value_);
+        -:  309:  }
+        -:  310:  /*! Provided for cases when automatic conversion from 
+        -:  311:   * 'int' to 'int_adapter' causes incorrect results. */
+        -:  312:  int_adapter operator*(const int rhs) const
+        -:  313:  {
+        -:  314:    if(is_special())
+        -:  315:    {
+        -:  316:      return mult_div_specials(rhs);
+        -:  317:    }
+        -:  318:    return int_adapter<int_type>(value_ * rhs);
+        -:  319:  }
+        -:  320:
+        -:  321:  // should templatize this to be consistant with op +-
+        -:  322:  int_adapter operator/(const int_adapter& rhs)const
+        -:  323:  {
+        -:  324:    if(this->is_special() || rhs.is_special())
+        -:  325:    {
+        -:  326:      if(is_infinity() && rhs.is_infinity())
+        -:  327:      {
+        -:  328:        return int_adapter<int_type>(not_a_number());
+        -:  329:      }
+        -:  330:      if(rhs != 0)
+        -:  331:      {
+        -:  332:        return mult_div_specials(rhs);
+        -:  333:      }
+        -:  334:      else { // let divide by zero blow itself up
+        -:  335:        return int_adapter<int_type>(value_ / rhs.value_);
+        -:  336:      }
+        -:  337:    }
+        -:  338:    return int_adapter<int_type>(value_ / rhs.value_);
+        -:  339:  }
+        -:  340:  /*! Provided for cases when automatic conversion from 
+        -:  341:   * 'int' to 'int_adapter' causes incorrect results. */
+        -:  342:  int_adapter operator/(const int rhs) const
+        -:  343:  {
+        -:  344:    if(is_special() && rhs != 0)
+        -:  345:    {
+        -:  346:      return mult_div_specials(rhs);
+        -:  347:    }
+        -:  348:    return int_adapter<int_type>(value_ / rhs);
+        -:  349:  }
+        -:  350:
+        -:  351:  // should templatize this to be consistant with op +-
+        -:  352:  int_adapter operator%(const int_adapter& rhs)const
+        -:  353:  {
+        -:  354:    if(this->is_special() || rhs.is_special())
+        -:  355:    {
+        -:  356:      if(is_infinity() && rhs.is_infinity())
+        -:  357:      {
+        -:  358:        return int_adapter<int_type>(not_a_number());
+        -:  359:      }
+        -:  360:      if(rhs != 0)
+        -:  361:      {
+        -:  362:        return mult_div_specials(rhs);
+        -:  363:      }
+        -:  364:      else { // let divide by zero blow itself up
+        -:  365:        return int_adapter<int_type>(value_ % rhs.value_);
+        -:  366:      }
+        -:  367:    }
+        -:  368:    return int_adapter<int_type>(value_ % rhs.value_);
+        -:  369:  }
+        -:  370:  /*! Provided for cases when automatic conversion from 
+        -:  371:   * 'int' to 'int_adapter' causes incorrect results. */
+        -:  372:  int_adapter operator%(const int rhs) const
+        -:  373:  {
+        -:  374:    if(is_special() && rhs != 0)
+        -:  375:    {
+        -:  376:      return mult_div_specials(rhs);
+        -:  377:    }
+        -:  378:    return int_adapter<int_type>(value_ % rhs);
+        -:  379:  }
+        -:  380:private:
+        -:  381:  int_type value_;
+        -:  382:  
+        -:  383:  //! returns -1, 0, 1, or 2 if 'this' is <, ==, >, or 'nan comparison' rhs
+        -:  384:  int compare(const int_adapter& rhs)const
+        -:  385:  {
+        -:  386:    if(this->is_special() || rhs.is_special())
+        -:  387:    {
+        -:  388:      if(this->is_nan() || rhs.is_nan()) {
+        -:  389:        if(this->is_nan() && rhs.is_nan()) {
+        -:  390:          return 0; // equal
+        -:  391:        }
+        -:  392:        else {
+        -:  393:          return 2; // nan
+        -:  394:        }
+        -:  395:      }
+        -:  396:      if((is_neg_inf(value_) && !is_neg_inf(rhs.value_)) ||
+        -:  397:         (is_pos_inf(rhs.value_) && !is_pos_inf(value_)) )
+        -:  398:        {
+        -:  399:          return -1; // less than
+        -:  400:        }
+        -:  401:      if((is_pos_inf(value_) && !is_pos_inf(rhs.value_)) ||
+        -:  402:         (is_neg_inf(rhs.value_) && !is_neg_inf(value_)) ) {
+        -:  403:        return 1; // greater than
+        -:  404:      }
+        -:  405:    }
+        -:  406:    if(value_ < rhs.value_) return -1;
+        -:  407:    if(value_ > rhs.value_) return 1;
+        -:  408:    // implied-> if(value_ == rhs.value_) 
+        -:  409:    return 0;
+        -:  410:  }
+        -:  411:  /* When multiplying and dividing with at least 1 special value
+        -:  412:   * very simmilar rules apply. In those cases where the rules
+        -:  413:   * are different, they are handled in the respective operator 
+        -:  414:   * function. */
+        -:  415:  //! Assumes at least 'this' or 'rhs' is a special value
+        -:  416:  int_adapter mult_div_specials(const int_adapter& rhs)const
+        -:  417:  {
+        -:  418:    if(this->is_nan() || rhs.is_nan()) {
+        -:  419:      return int_adapter<int_type>(not_a_number());
+        -:  420:    }
+        -:  421:    BOOST_CONSTEXPR_OR_CONST int min_value = std::numeric_limits<int_type>::is_signed ? 0 : 1; 
+        -:  422:    if((*this > 0 && rhs > 0) || (*this < min_value && rhs < min_value)) {
+        -:  423:        return int_adapter<int_type>(pos_infinity());
+        -:  424:    }
+        -:  425:    if((*this > 0 && rhs < min_value) || (*this < min_value && rhs > 0)) {
+        -:  426:        return int_adapter<int_type>(neg_infinity());
+        -:  427:    }
+        -:  428:    //implied -> if(this->value_ == 0 || rhs.value_ == 0)
+        -:  429:    return int_adapter<int_type>(not_a_number());
+        -:  430:  }
+        -:  431:  /* Overloaded function necessary because of special
+        -:  432:   * situation where int_adapter is instantiated with 
+        -:  433:   * 'unsigned' and func is called with negative int.
+        -:  434:   * It would produce incorrect results since 'unsigned'
+        -:  435:   * wraps around when initialized with a negative value */
+        -:  436:  //! Assumes 'this' is a special value
+        -:  437:  int_adapter mult_div_specials(const int& rhs) const
+        -:  438:  {
+        -:  439:    if(this->is_nan()) {
+        -:  440:      return int_adapter<int_type>(not_a_number());
+        -:  441:    }
+        -:  442:    BOOST_CONSTEXPR_OR_CONST int min_value = std::numeric_limits<int_type>::is_signed ? 0 : 1; 
+        -:  443:    if((*this > 0 && rhs > 0) || (*this < min_value && rhs < 0)) {
+        -:  444:        return int_adapter<int_type>(pos_infinity());
+        -:  445:    }
+        -:  446:    if((*this > 0 && rhs < 0) || (*this < min_value && rhs > 0)) {
+        -:  447:        return int_adapter<int_type>(neg_infinity());
+        -:  448:    }
+        -:  449:    //implied -> if(this->value_ == 0 || rhs.value_ == 0)
+        -:  450:    return int_adapter<int_type>(not_a_number());
+        -:  451:  }
+        -:  452:  
+        -:  453:};
+        -:  454:
+        -:  455:#ifndef BOOST_DATE_TIME_NO_LOCALE
+        -:  456:  /*! Expected output is either a numeric representation 
+        -:  457:   * or a special values representation.<BR> 
+        -:  458:   * Ex. "12", "+infinity", "not-a-number", etc. */
+        -:  459:  //template<class charT = char, class traits = std::traits<charT>, typename int_type>
+        -:  460:  template<class charT, class traits, typename int_type>
+        -:  461:  inline
+        -:  462:  std::basic_ostream<charT, traits>& 
+        -:  463:  operator<<(std::basic_ostream<charT, traits>& os, const int_adapter<int_type>& ia)
+        -:  464:  {
+        -:  465:    if(ia.is_special()) {
+        -:  466:      // switch copied from date_names_put.hpp
+        -:  467:      switch(ia.as_special())
+        -:  468:        {
+        -:  469:      case not_a_date_time:
+        -:  470:        os << "not-a-number";
+        -:  471:        break;
+        -:  472:      case pos_infin:
+        -:  473:        os << "+infinity";
+        -:  474:        break;
+        -:  475:      case neg_infin:
+        -:  476:        os << "-infinity";
+        -:  477:        break;
+        -:  478:      default:
+        -:  479:        os << "";
+        -:  480:      }
+        -:  481:    }
+        -:  482:    else {
+        -:  483:      os << ia.as_number(); 
+        -:  484:    }
+        -:  485:    return os;
+        -:  486:  }
+        -:  487:#endif
+        -:  488:
+        -:  489:
+        -:  490:} } //namespace date_time
+        -:  491:
+        -:  492:#if defined(BOOST_MSVC)
+        -:  493:#pragma warning(pop)
+        -:  494:#endif
+        -:  495:
+        -:  496:#endif

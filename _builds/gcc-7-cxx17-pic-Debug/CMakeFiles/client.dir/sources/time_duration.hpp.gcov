@@ -1,0 +1,303 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/date_time/time_duration.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef DATE_TIME_TIME_DURATION_HPP___
+        -:    2:#define DATE_TIME_TIME_DURATION_HPP___
+        -:    3:
+        -:    4:/* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+        -:    5: * Use, modification and distribution is subject to the
+        -:    6: * Boost Software License, Version 1.0. (See accompanying
+        -:    7: * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+        -:    8: * Author: Jeff Garland, Bart Garst
+        -:    9: * $Date$
+        -:   10: */
+        -:   11:
+        -:   12:#include <boost/core/enable_if.hpp>
+        -:   13:#include <boost/cstdint.hpp>
+        -:   14:#include <boost/date_time/compiler_config.hpp>
+        -:   15:#include <boost/date_time/special_defs.hpp>
+        -:   16:#include <boost/date_time/time_defs.hpp>
+        -:   17:#include <boost/operators.hpp>
+        -:   18:#include <boost/static_assert.hpp>
+        -:   19:#include <boost/type_traits/is_integral.hpp>
+        -:   20:
+        -:   21:namespace boost {
+        -:   22:namespace date_time {
+        -:   23:
+        -:   24:
+        -:   25:  //! Represents some amount of elapsed time measure to a given resolution
+        -:   26:  /*! This class represents a standard set of capabilities for all
+        -:   27:      counted time durations.  Time duration implementations should derive
+        -:   28:      from this class passing their type as the first template parameter.
+        -:   29:      This design allows the subclass duration types to provide custom
+        -:   30:      construction policies or other custom features not provided here.
+        -:   31:
+        -:   32:      @param T The subclass type
+        -:   33:      @param rep_type The time resolution traits for this duration type.
+        -:   34:  */
+        -:   35:  template<class T, typename rep_type>
+        -:   36:  class BOOST_SYMBOL_VISIBLE time_duration : private
+        -:   37:      boost::less_than_comparable<T
+        -:   38:    , boost::equality_comparable<T
+        -:   39:    > >
+        -:   40:  /* dividable, addable, and subtractable operator templates
+        -:   41:   * won't work with this class (MSVC++ 6.0). return type
+        -:   42:   * from '+=' is different than expected return type
+        -:   43:   * from '+'. multipliable probably wont work
+        -:   44:   * either (haven't tried) */
+        -:   45:  {
+        -:   46:  public:
+        -:   47:    // A tag for type categorization. Can be used to detect Boost.DateTime duration types in generic code.
+        -:   48:    typedef void _is_boost_date_time_duration;
+        -:   49:    typedef T duration_type;  //the subclass
+        -:   50:    typedef rep_type traits_type;
+        -:   51:    typedef typename rep_type::day_type  day_type;
+        -:   52:    typedef typename rep_type::hour_type hour_type;
+        -:   53:    typedef typename rep_type::min_type  min_type;
+        -:   54:    typedef typename rep_type::sec_type  sec_type;
+        -:   55:    typedef typename rep_type::fractional_seconds_type fractional_seconds_type;
+        -:   56:    typedef typename rep_type::tick_type tick_type;
+        -:   57:    typedef typename rep_type::impl_type impl_type;
+        -:   58:
+        -:   59:    time_duration() : ticks_(0) {}
+        -:   60:    time_duration(hour_type hours_in,
+        -:   61:                  min_type minutes_in,
+        -:   62:                  sec_type seconds_in=0,
+        -:   63:                  fractional_seconds_type frac_sec_in = 0) :
+        -:   64:      ticks_(rep_type::to_tick_count(hours_in,minutes_in,seconds_in,frac_sec_in))
+        -:   65:    {}
+        -:   66:    // copy constructor required for dividable<>
+        -:   67:    //! Construct from another time_duration (Copy constructor)
+        -:   68:    time_duration(const time_duration<T, rep_type>& other)
+        -:   69:      : ticks_(other.ticks_)
+        -:   70:    {}
+        -:   71:    //! Construct from special_values
+        -:   72:    time_duration(special_values sv) : ticks_(impl_type::from_special(sv))
+        -:   73:    {}
+        -:   74:    //! Returns smallest representable duration
+        -:   75:    static duration_type unit()
+        -:   76:    {
+        -:   77:      return duration_type(0,0,0,1);
+        -:   78:    }
+        -:   79:    //! Return the number of ticks in a second
+    #####:   80:    static tick_type ticks_per_second()
+        -:   81:    {
+    #####:   82:      return rep_type::res_adjust();
+        -:   83:    }
+        -:   84:    //! Provide the resolution of this duration type
+        -:   85:    static time_resolutions resolution()
+        -:   86:    {
+        -:   87:      return rep_type::resolution();
+        -:   88:    }
+        -:   89:    //! Returns number of hours in the duration
+        -:   90:    hour_type hours()   const
+        -:   91:    {
+        -:   92:      return static_cast<hour_type>(ticks() / (3600*ticks_per_second()));
+        -:   93:    }
+        -:   94:    //! Returns normalized number of minutes
+        -:   95:    min_type minutes() const
+        -:   96:    {
+        -:   97:      return static_cast<min_type>((ticks() / (60*ticks_per_second())) % 60);
+        -:   98:    }
+        -:   99:    //! Returns normalized number of seconds (0..60)
+        -:  100:    sec_type seconds() const
+        -:  101:    {
+        -:  102:      return static_cast<sec_type>((ticks()/ticks_per_second()) % 60);
+        -:  103:    }
+        -:  104:    //! Returns total number of seconds truncating any fractional seconds
+    #####:  105:    sec_type total_seconds() const
+        -:  106:    {
+    #####:  107:      return static_cast<sec_type>(ticks() / ticks_per_second());
+        -:  108:    }
+        -:  109:    //! Returns total number of milliseconds truncating any fractional seconds
+        -:  110:    tick_type total_milliseconds() const
+        -:  111:    {
+        -:  112:      if (ticks_per_second() < 1000) {
+        -:  113:        return ticks() * (static_cast<tick_type>(1000) / ticks_per_second());
+        -:  114:      }
+        -:  115:      return ticks() / (ticks_per_second() / static_cast<tick_type>(1000)) ;
+        -:  116:    }
+        -:  117:    //! Returns total number of nanoseconds truncating any sub millisecond values
+        -:  118:    tick_type total_nanoseconds() const
+        -:  119:    {
+        -:  120:      if (ticks_per_second() < 1000000000) {
+        -:  121:        return ticks() * (static_cast<tick_type>(1000000000) / ticks_per_second());
+        -:  122:      }
+        -:  123:      return ticks() / (ticks_per_second() / static_cast<tick_type>(1000000000)) ;
+        -:  124:    }
+        -:  125:    //! Returns total number of microseconds truncating any sub microsecond values
+        -:  126:    tick_type total_microseconds() const
+        -:  127:    {
+        -:  128:      if (ticks_per_second() < 1000000) {
+        -:  129:        return ticks() * (static_cast<tick_type>(1000000) / ticks_per_second());
+        -:  130:      }
+        -:  131:      return ticks() / (ticks_per_second() / static_cast<tick_type>(1000000)) ;
+        -:  132:    }
+        -:  133:    //! Returns count of fractional seconds at given resolution
+    #####:  134:    fractional_seconds_type fractional_seconds() const
+        -:  135:    {
+    #####:  136:      return (ticks() % ticks_per_second());
+        -:  137:    }
+        -:  138:    //! Returns number of possible digits in fractional seconds
+        -:  139:    static unsigned short num_fractional_digits()
+        -:  140:    {
+        -:  141:      return rep_type::num_fractional_digits();
+        -:  142:    }
+        -:  143:    duration_type invert_sign() const
+        -:  144:    {
+        -:  145:      return duration_type(ticks_ * (-1));
+        -:  146:    }
+        -:  147:    bool is_negative() const
+        -:  148:    {
+        -:  149:      return ticks_ < 0;
+        -:  150:    }
+        -:  151:    bool operator<(const time_duration& rhs)  const
+        -:  152:    {
+        -:  153:      return ticks_ <  rhs.ticks_;
+        -:  154:    }
+        -:  155:    bool operator==(const time_duration& rhs)  const
+        -:  156:    {
+        -:  157:      return ticks_ ==  rhs.ticks_;
+        -:  158:    }
+        -:  159:    //! unary- Allows for time_duration td = -td1
+        -:  160:    duration_type operator-()const
+        -:  161:    {
+        -:  162:      return duration_type(ticks_ * (-1));
+        -:  163:    }
+        -:  164:    duration_type operator-(const duration_type& d) const
+        -:  165:    {
+        -:  166:      return duration_type(ticks_ - d.ticks_);
+        -:  167:    }
+        -:  168:    duration_type operator+(const duration_type& d) const
+        -:  169:    {
+        -:  170:      return duration_type(ticks_ + d.ticks_);
+        -:  171:    }
+        -:  172:    duration_type operator/(int divisor) const
+        -:  173:    {
+        -:  174:      return duration_type(ticks_ / divisor);
+        -:  175:    }
+        -:  176:    duration_type operator-=(const duration_type& d)
+        -:  177:    {
+        -:  178:      ticks_ = ticks_ - d.ticks_;
+        -:  179:      return duration_type(ticks_);
+        -:  180:    }
+        -:  181:    duration_type operator+=(const duration_type& d)
+        -:  182:    {
+        -:  183:      ticks_ = ticks_ + d.ticks_;
+        -:  184:      return duration_type(ticks_);
+        -:  185:    }
+        -:  186:    //! Division operations on a duration with an integer.
+        -:  187:    duration_type operator/=(int divisor)
+        -:  188:    {
+        -:  189:      ticks_ = ticks_ / divisor;
+        -:  190:      return duration_type(ticks_);
+        -:  191:    }
+        -:  192:    //! Multiplication operations an a duration with an integer
+        -:  193:    duration_type operator*(int rhs) const
+        -:  194:    {
+        -:  195:      return duration_type(ticks_ * rhs);
+        -:  196:    }
+        -:  197:    duration_type operator*=(int divisor)
+        -:  198:    {
+        -:  199:      ticks_ = ticks_ * divisor;
+        -:  200:      return duration_type(ticks_);
+        -:  201:    }
+    #####:  202:    tick_type ticks() const
+        -:  203:    {
+    #####:  204:      return traits_type::as_number(ticks_);
+        -:  205:    }
+        -:  206:
+        -:  207:    //! Is ticks_ a special value?
+    #####:  208:    bool is_special()const
+        -:  209:    {
+    #####:  210:      if(traits_type::is_adapted())
+        -:  211:      {
+    #####:  212:        return ticks_.is_special();
+        -:  213:      }
+        -:  214:      else{
+    #####:  215:        return false;
+        -:  216:      }
+        -:  217:    }
+        -:  218:    //! Is duration pos-infinity
+    #####:  219:    bool is_pos_infinity()const
+        -:  220:    {
+    #####:  221:      if(traits_type::is_adapted())
+        -:  222:      {
+    #####:  223:        return ticks_.is_pos_infinity();
+        -:  224:      }
+        -:  225:      else{
+    #####:  226:        return false;
+        -:  227:      }
+        -:  228:    }
+        -:  229:    //! Is duration neg-infinity
+        -:  230:    bool is_neg_infinity()const
+        -:  231:    {
+        -:  232:      if(traits_type::is_adapted())
+        -:  233:      {
+        -:  234:        return ticks_.is_neg_infinity();
+        -:  235:      }
+        -:  236:      else{
+        -:  237:        return false;
+        -:  238:      }
+        -:  239:    }
+        -:  240:    //! Is duration not-a-date-time
+        -:  241:    bool is_not_a_date_time()const
+        -:  242:    {
+        -:  243:      if(traits_type::is_adapted())
+        -:  244:      {
+        -:  245:        return ticks_.is_nan();
+        -:  246:      }
+        -:  247:      else{
+        -:  248:        return false;
+        -:  249:      }
+        -:  250:    }
+        -:  251:
+        -:  252:    //! Used for special_values output
+        -:  253:    impl_type get_rep()const
+        -:  254:    {
+        -:  255:      return ticks_;
+        -:  256:    }
+        -:  257:
+        -:  258:  protected:
+    #####:  259:    explicit time_duration(impl_type in) : ticks_(in) {}
+        -:  260:    impl_type ticks_;
+        -:  261:  };
+        -:  262:
+        -:  263:
+        -:  264:
+        -:  265:  //! Template for instantiating derived adjusting durations
+        -:  266:  /* These templates are designed to work with multiples of
+        -:  267:   * 10 for frac_of_second and resolution adjustment
+        -:  268:   */
+        -:  269:  template<class base_duration, boost::int64_t frac_of_second>
+        -:  270:  class BOOST_SYMBOL_VISIBLE subsecond_duration : public base_duration
+        -:  271:  {
+        -:  272:  public:
+        -:  273:    typedef typename base_duration::impl_type impl_type;
+        -:  274:    typedef typename base_duration::traits_type traits_type;
+        -:  275:
+        -:  276:  private:
+        -:  277:    // To avoid integer overflow we precompute the duration resolution conversion coefficient (ticket #3471)
+        -:  278:    BOOST_STATIC_ASSERT_MSG((traits_type::ticks_per_second >= frac_of_second ? traits_type::ticks_per_second % frac_of_second : frac_of_second % traits_type::ticks_per_second) == 0,\
+        -:  279:      "The base duration resolution must be a multiple of the subsecond duration resolution");
+        -:  280:    BOOST_STATIC_CONSTANT(boost::int64_t, adjustment_ratio = (traits_type::ticks_per_second >= frac_of_second ? traits_type::ticks_per_second / frac_of_second : frac_of_second / traits_type::ticks_per_second));
+        -:  281:
+        -:  282:  public:
+        -:  283:    // The argument (ss) must be an integral type
+        -:  284:    template <typename T>
+    #####:  285:    explicit subsecond_duration(T const& ss,
+        -:  286:                                typename boost::enable_if<boost::is_integral<T>, void>::type* = 0) :
+    #####:  287:      base_duration(impl_type(traits_type::ticks_per_second >= frac_of_second ? ss * adjustment_ratio : ss / adjustment_ratio))
+        -:  288:    {
+    #####:  289:    }
+        -:  290:  };
+        -:  291:
+        -:  292:} } //namespace date_time
+        -:  293:
+        -:  294:
+        -:  295:
+        -:  296:
+        -:  297:#endif
+        -:  298:

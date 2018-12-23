@@ -1,0 +1,105 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/detail/socket_holder.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// detail/socket_holder.hpp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_DETAIL_SOCKET_HOLDER_HPP
+        -:   12:#define BOOST_ASIO_DETAIL_SOCKET_HOLDER_HPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/detail/noncopyable.hpp>
+        -:   20:#include <boost/asio/detail/socket_ops.hpp>
+        -:   21:
+        -:   22:#include <boost/asio/detail/push_options.hpp>
+        -:   23:
+        -:   24:namespace boost {
+        -:   25:namespace asio {
+        -:   26:namespace detail {
+        -:   27:
+        -:   28:// Implement the resource acquisition is initialisation idiom for sockets.
+        -:   29:class socket_holder
+        -:   30:  : private noncopyable
+        -:   31:{
+        -:   32:public:
+        -:   33:  // Construct as an uninitialised socket.
+        -:   34:  socket_holder()
+        -:   35:    : socket_(invalid_socket)
+        -:   36:  {
+        -:   37:  }
+        -:   38:
+        -:   39:  // Construct to take ownership of the specified socket.
+    #####:   40:  explicit socket_holder(socket_type s)
+    #####:   41:    : socket_(s)
+        -:   42:  {
+    #####:   43:  }
+        -:   44:
+        -:   45:  // Destructor.
+    #####:   46:  ~socket_holder()
+    #####:   47:  {
+    #####:   48:    if (socket_ != invalid_socket)
+        -:   49:    {
+    #####:   50:      boost::system::error_code ec;
+    #####:   51:      socket_ops::state_type state = 0;
+    #####:   52:      socket_ops::close(socket_, state, true, ec);
+        -:   53:    }
+    #####:   54:  }
+        -:   55:
+        -:   56:  // Get the underlying socket.
+    #####:   57:  socket_type get() const
+        -:   58:  {
+    #####:   59:    return socket_;
+        -:   60:  }
+        -:   61:
+        -:   62:  // Reset to an uninitialised socket.
+        -:   63:  void reset()
+        -:   64:  {
+        -:   65:    if (socket_ != invalid_socket)
+        -:   66:    {
+        -:   67:      boost::system::error_code ec;
+        -:   68:      socket_ops::state_type state = 0;
+        -:   69:      socket_ops::close(socket_, state, true, ec);
+        -:   70:      socket_ = invalid_socket;
+        -:   71:    }
+        -:   72:  }
+        -:   73:
+        -:   74:  // Reset to take ownership of the specified socket.
+        -:   75:  void reset(socket_type s)
+        -:   76:  {
+        -:   77:    reset();
+        -:   78:    socket_ = s;
+        -:   79:  }
+        -:   80:
+        -:   81:  // Release ownership of the socket.
+    #####:   82:  socket_type release()
+        -:   83:  {
+    #####:   84:    socket_type tmp = socket_;
+    #####:   85:    socket_ = invalid_socket;
+    #####:   86:    return tmp;
+        -:   87:  }
+        -:   88:
+        -:   89:private:
+        -:   90:  // The underlying socket.
+        -:   91:  socket_type socket_;
+        -:   92:};
+        -:   93:
+        -:   94:} // namespace detail
+        -:   95:} // namespace asio
+        -:   96:} // namespace boost
+        -:   97:
+        -:   98:#include <boost/asio/detail/pop_options.hpp>
+        -:   99:
+        -:  100:#endif // BOOST_ASIO_DETAIL_SOCKET_HOLDER_HPP

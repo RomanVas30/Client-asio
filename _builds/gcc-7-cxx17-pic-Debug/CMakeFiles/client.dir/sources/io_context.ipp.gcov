@@ -1,0 +1,181 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/asio/impl/io_context.ipp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1://
+        -:    2:// impl/io_context.ipp
+        -:    3:// ~~~~~~~~~~~~~~~~~~~
+        -:    4://
+        -:    5:// Copyright (c) 2003-2018 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+        -:    6://
+        -:    7:// Distributed under the Boost Software License, Version 1.0. (See accompanying
+        -:    8:// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+        -:    9://
+        -:   10:
+        -:   11:#ifndef BOOST_ASIO_IMPL_IO_CONTEXT_IPP
+        -:   12:#define BOOST_ASIO_IMPL_IO_CONTEXT_IPP
+        -:   13:
+        -:   14:#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   15:# pragma once
+        -:   16:#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
+        -:   17:
+        -:   18:#include <boost/asio/detail/config.hpp>
+        -:   19:#include <boost/asio/io_context.hpp>
+        -:   20:#include <boost/asio/detail/concurrency_hint.hpp>
+        -:   21:#include <boost/asio/detail/limits.hpp>
+        -:   22:#include <boost/asio/detail/scoped_ptr.hpp>
+        -:   23:#include <boost/asio/detail/service_registry.hpp>
+        -:   24:#include <boost/asio/detail/throw_error.hpp>
+        -:   25:
+        -:   26:#if defined(BOOST_ASIO_HAS_IOCP)
+        -:   27:# include <boost/asio/detail/win_iocp_io_context.hpp>
+        -:   28:#else
+        -:   29:# include <boost/asio/detail/scheduler.hpp>
+        -:   30:#endif
+        -:   31:
+        -:   32:#include <boost/asio/detail/push_options.hpp>
+        -:   33:
+        -:   34:namespace boost {
+        -:   35:namespace asio {
+        -:   36:
+        1:   37:io_context::io_context()
+        1:   38:  : impl_(add_impl(new impl_type(*this, BOOST_ASIO_CONCURRENCY_HINT_DEFAULT)))
+        -:   39:{
+        1:   40:}
+        -:   41:
+        -:   42:io_context::io_context(int concurrency_hint)
+        -:   43:  : impl_(add_impl(new impl_type(*this, concurrency_hint == 1
+        -:   44:          ? BOOST_ASIO_CONCURRENCY_HINT_1 : concurrency_hint)))
+        -:   45:{
+        -:   46:}
+        -:   47:
+        1:   48:io_context::impl_type& io_context::add_impl(io_context::impl_type* impl)
+        -:   49:{
+        2:   50:  boost::asio::detail::scoped_ptr<impl_type> scoped_impl(impl);
+        1:   51:  boost::asio::add_service<impl_type>(*this, scoped_impl.get());
+        2:   52:  return *scoped_impl.release();
+        -:   53:}
+        -:   54:
+        1:   55:io_context::~io_context()
+        -:   56:{
+        1:   57:}
+        -:   58:
+        -:   59:io_context::count_type io_context::run()
+        -:   60:{
+        -:   61:  boost::system::error_code ec;
+        -:   62:  count_type s = impl_.run(ec);
+        -:   63:  boost::asio::detail::throw_error(ec);
+        -:   64:  return s;
+        -:   65:}
+        -:   66:
+        -:   67:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:   68:io_context::count_type io_context::run(boost::system::error_code& ec)
+        -:   69:{
+        -:   70:  return impl_.run(ec);
+        -:   71:}
+        -:   72:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:   73:
+        -:   74:io_context::count_type io_context::run_one()
+        -:   75:{
+        -:   76:  boost::system::error_code ec;
+        -:   77:  count_type s = impl_.run_one(ec);
+        -:   78:  boost::asio::detail::throw_error(ec);
+        -:   79:  return s;
+        -:   80:}
+        -:   81:
+        -:   82:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:   83:io_context::count_type io_context::run_one(boost::system::error_code& ec)
+        -:   84:{
+        -:   85:  return impl_.run_one(ec);
+        -:   86:}
+        -:   87:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:   88:
+        -:   89:io_context::count_type io_context::poll()
+        -:   90:{
+        -:   91:  boost::system::error_code ec;
+        -:   92:  count_type s = impl_.poll(ec);
+        -:   93:  boost::asio::detail::throw_error(ec);
+        -:   94:  return s;
+        -:   95:}
+        -:   96:
+        -:   97:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:   98:io_context::count_type io_context::poll(boost::system::error_code& ec)
+        -:   99:{
+        -:  100:  return impl_.poll(ec);
+        -:  101:}
+        -:  102:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  103:
+        -:  104:io_context::count_type io_context::poll_one()
+        -:  105:{
+        -:  106:  boost::system::error_code ec;
+        -:  107:  count_type s = impl_.poll_one(ec);
+        -:  108:  boost::asio::detail::throw_error(ec);
+        -:  109:  return s;
+        -:  110:}
+        -:  111:
+        -:  112:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  113:io_context::count_type io_context::poll_one(boost::system::error_code& ec)
+        -:  114:{
+        -:  115:  return impl_.poll_one(ec);
+        -:  116:}
+        -:  117:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  118:
+        -:  119:void io_context::stop()
+        -:  120:{
+        -:  121:  impl_.stop();
+        -:  122:}
+        -:  123:
+        -:  124:bool io_context::stopped() const
+        -:  125:{
+        -:  126:  return impl_.stopped();
+        -:  127:}
+        -:  128:
+        -:  129:void io_context::restart()
+        -:  130:{
+        -:  131:  impl_.restart();
+        -:  132:}
+        -:  133:
+        -:  134:io_context::service::service(boost::asio::io_context& owner)
+        -:  135:  : execution_context::service(owner)
+        -:  136:{
+        -:  137:}
+        -:  138:
+        -:  139:io_context::service::~service()
+        -:  140:{
+        -:  141:}
+        -:  142:
+        -:  143:void io_context::service::shutdown()
+        -:  144:{
+        -:  145:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  146:  shutdown_service();
+        -:  147:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  148:}
+        -:  149:
+        -:  150:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  151:void io_context::service::shutdown_service()
+        -:  152:{
+        -:  153:}
+        -:  154:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  155:
+        -:  156:void io_context::service::notify_fork(io_context::fork_event ev)
+        -:  157:{
+        -:  158:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  159:  fork_service(ev);
+        -:  160:#else // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  161:  (void)ev;
+        -:  162:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  163:}
+        -:  164:
+        -:  165:#if !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  166:void io_context::service::fork_service(io_context::fork_event)
+        -:  167:{
+        -:  168:}
+        -:  169:#endif // !defined(BOOST_ASIO_NO_DEPRECATED)
+        -:  170:
+        -:  171:} // namespace asio
+        -:  172:} // namespace boost
+        -:  173:
+        -:  174:#include <boost/asio/detail/pop_options.hpp>
+        -:  175:
+        -:  176:#endif // BOOST_ASIO_IMPL_IO_CONTEXT_IPP

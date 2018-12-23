@@ -1,0 +1,507 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/pthread/condition_variable.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP
+        -:    2:#define BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP
+        -:    3:// Distributed under the Boost Software License, Version 1.0. (See
+        -:    4:// accompanying file LICENSE_1_0.txt or copy at
+        -:    5:// http://www.boost.org/LICENSE_1_0.txt)
+        -:    6:// (C) Copyright 2007-10 Anthony Williams
+        -:    7:// (C) Copyright 2011-2012 Vicente J. Botet Escriba
+        -:    8:
+        -:    9:#include <boost/thread/detail/platform_time.hpp>
+        -:   10:#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+        -:   11:#include <boost/thread/pthread/pthread_helpers.hpp>
+        -:   12:
+        -:   13:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:   14:#include <boost/thread/pthread/thread_data.hpp>
+        -:   15:#endif
+        -:   16:#include <boost/thread/pthread/condition_variable_fwd.hpp>
+        -:   17:#ifdef BOOST_THREAD_USES_CHRONO
+        -:   18:#include <boost/chrono/system_clocks.hpp>
+        -:   19:#include <boost/chrono/ceil.hpp>
+        -:   20:#endif
+        -:   21:#include <boost/thread/detail/delete.hpp>
+        -:   22:
+        -:   23:#include <algorithm>
+        -:   24:
+        -:   25:#include <boost/config/abi_prefix.hpp>
+        -:   26:
+        -:   27:namespace boost
+        -:   28:{
+        -:   29:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:   30:    namespace this_thread
+        -:   31:    {
+        -:   32:        void BOOST_THREAD_DECL interruption_point();
+        -:   33:    }
+        -:   34:#endif
+        -:   35:
+        -:   36:    namespace thread_cv_detail
+        -:   37:    {
+        -:   38:        template<typename MutexType>
+        -:   39:        struct lock_on_exit
+        -:   40:        {
+        -:   41:            MutexType* m;
+        -:   42:
+    #####:   43:            lock_on_exit():
+    #####:   44:                m(0)
+    #####:   45:            {}
+        -:   46:
+    #####:   47:            void activate(MutexType& m_)
+        -:   48:            {
+    #####:   49:                m_.unlock();
+    #####:   50:                m=&m_;
+    #####:   51:            }
+    #####:   52:            void deactivate()
+        -:   53:            {
+    #####:   54:                if (m)
+        -:   55:                {
+    #####:   56:                    m->lock();
+        -:   57:                }
+    #####:   58:                m = 0;
+    #####:   59:            }
+    #####:   60:            ~lock_on_exit() BOOST_NOEXCEPT_IF(false)
+        -:   61:            {
+    #####:   62:                if (m)
+        -:   63:                {
+    #####:   64:                    m->lock();
+        -:   65:                }
+    #####:   66:           }
+        -:   67:        };
+        -:   68:    }
+        -:   69:
+    #####:   70:    inline void condition_variable::wait(unique_lock<mutex>& m)
+        -:   71:    {
+        -:   72:#if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+        -:   73:        if(! m.owns_lock())
+        -:   74:        {
+        -:   75:            boost::throw_exception(condition_error(-1, "boost::condition_variable::wait() failed precondition mutex not owned"));
+        -:   76:        }
+        -:   77:#endif
+    #####:   78:        int res=0;
+        -:   79:        {
+        -:   80:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+    #####:   81:            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+    #####:   82:            detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+    #####:   83:            pthread_mutex_t* the_mutex = &internal_mutex;
+    #####:   84:            guard.activate(m);
+    #####:   85:            res = pthread_cond_wait(&cond,the_mutex);
+    #####:   86:            check_for_interruption.unlock_if_locked();
+    #####:   87:            guard.deactivate();
+        -:   88:#else
+        -:   89:            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
+        -:   90:            res = pthread_cond_wait(&cond,the_mutex);
+        -:   91:#endif
+        -:   92:        }
+        -:   93:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+    #####:   94:        this_thread::interruption_point();
+        -:   95:#endif
+    #####:   96:        if(res && res != EINTR)
+        -:   97:        {
+    #####:   98:            boost::throw_exception(condition_error(res, "boost::condition_variable::wait failed in pthread_cond_wait"));
+        -:   99:        }
+    #####:  100:    }
+        -:  101:
+        -:  102:    // When this function returns true:
+        -:  103:    // * A notification (or sometimes a spurious OS signal) has been received
+        -:  104:    // * Do not assume that the timeout has not been reached
+        -:  105:    // * Do not assume that the predicate has been changed
+        -:  106:    //
+        -:  107:    // When this function returns false:
+        -:  108:    // * The timeout has been reached
+        -:  109:    // * Do not assume that a notification has not been received
+        -:  110:    // * Do not assume that the predicate has not been changed
+    #####:  111:    inline bool condition_variable::do_wait_until(
+        -:  112:                unique_lock<mutex>& m,
+        -:  113:                detail::internal_platform_timepoint const &timeout)
+        -:  114:    {
+        -:  115:#if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+        -:  116:        if (!m.owns_lock())
+        -:  117:        {
+        -:  118:            boost::throw_exception(condition_error(EPERM, "boost::condition_variable::do_wait_until() failed precondition mutex not owned"));
+        -:  119:        }
+        -:  120:#endif
+        -:  121:        int cond_res;
+        -:  122:        {
+        -:  123:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+    #####:  124:            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+    #####:  125:            detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+    #####:  126:            pthread_mutex_t* the_mutex = &internal_mutex;
+    #####:  127:            guard.activate(m);
+    #####:  128:            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.getTs());
+    #####:  129:            check_for_interruption.unlock_if_locked();
+    #####:  130:            guard.deactivate();
+        -:  131:#else
+        -:  132:            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
+        -:  133:            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.getTs());
+        -:  134:#endif
+        -:  135:        }
+        -:  136:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+    #####:  137:        this_thread::interruption_point();
+        -:  138:#endif
+    #####:  139:        if(cond_res==ETIMEDOUT)
+        -:  140:        {
+    #####:  141:            return false;
+        -:  142:        }
+    #####:  143:        if(cond_res)
+        -:  144:        {
+    #####:  145:            boost::throw_exception(condition_error(cond_res, "boost::condition_variable::do_wait_until failed in pthread_cond_timedwait"));
+        -:  146:        }
+    #####:  147:        return true;
+        -:  148:    }
+        -:  149:
+        -:  150:    inline void condition_variable::notify_one() BOOST_NOEXCEPT
+        -:  151:    {
+        -:  152:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  153:        boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+        -:  154:#endif
+        -:  155:        BOOST_VERIFY(!pthread_cond_signal(&cond));
+        -:  156:    }
+        -:  157:
+        -:  158:    inline void condition_variable::notify_all() BOOST_NOEXCEPT
+        -:  159:    {
+        -:  160:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  161:        boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+        -:  162:#endif
+        -:  163:        BOOST_VERIFY(!pthread_cond_broadcast(&cond));
+        -:  164:    }
+        -:  165:
+        -:  166:    class condition_variable_any
+        -:  167:    {
+        -:  168:        pthread_mutex_t internal_mutex;
+        -:  169:        pthread_cond_t cond;
+        -:  170:
+        -:  171:    public:
+        -:  172:        BOOST_THREAD_NO_COPYABLE(condition_variable_any)
+        -:  173:        condition_variable_any()
+        -:  174:        {
+        -:  175:            int const res=pthread_mutex_init(&internal_mutex,NULL);
+        -:  176:            if(res)
+        -:  177:            {
+        -:  178:                boost::throw_exception(thread_resource_error(res, "boost::condition_variable_any::condition_variable_any() failed in pthread_mutex_init"));
+        -:  179:            }
+        -:  180:            int const res2 = pthread::cond_init(cond);
+        -:  181:            if(res2)
+        -:  182:            {
+        -:  183:                BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
+        -:  184:                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable_any::condition_variable_any() failed in pthread::cond_init"));
+        -:  185:            }
+        -:  186:        }
+        -:  187:        ~condition_variable_any()
+        -:  188:        {
+        -:  189:            BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
+        -:  190:            BOOST_VERIFY(!pthread_cond_destroy(&cond));
+        -:  191:        }
+        -:  192:
+        -:  193:        template<typename lock_type>
+        -:  194:        void wait(lock_type& m)
+        -:  195:        {
+        -:  196:            int res=0;
+        -:  197:            {
+        -:  198:                thread_cv_detail::lock_on_exit<lock_type> guard;
+        -:  199:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  200:                detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+        -:  201:#else
+        -:  202:                boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
+        -:  203:#endif
+        -:  204:                guard.activate(m);
+        -:  205:                res=pthread_cond_wait(&cond,&internal_mutex);
+        -:  206:                check_for_interruption.unlock_if_locked();
+        -:  207:                guard.deactivate();
+        -:  208:            }
+        -:  209:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  210:            this_thread::interruption_point();
+        -:  211:#endif
+        -:  212:            if(res)
+        -:  213:            {
+        -:  214:                boost::throw_exception(condition_error(res, "boost::condition_variable_any::wait() failed in pthread_cond_wait"));
+        -:  215:            }
+        -:  216:        }
+        -:  217:
+        -:  218:        template<typename lock_type,typename predicate_type>
+        -:  219:        void wait(lock_type& m,predicate_type pred)
+        -:  220:        {
+        -:  221:            while (!pred())
+        -:  222:            {
+        -:  223:                wait(m);
+        -:  224:            }
+        -:  225:        }
+        -:  226:
+        -:  227:#if defined BOOST_THREAD_USES_DATETIME
+        -:  228:        template<typename lock_type>
+        -:  229:        bool timed_wait(lock_type& m,boost::system_time const& abs_time)
+        -:  230:        {
+        -:  231:#if defined BOOST_THREAD_WAIT_BUG
+        -:  232:            const detail::real_platform_timepoint ts(abs_time + BOOST_THREAD_WAIT_BUG);
+        -:  233:#else
+        -:  234:            const detail::real_platform_timepoint ts(abs_time);
+        -:  235:#endif
+        -:  236:#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+        -:  237:            // The system time may jump while this function is waiting. To compensate for this and time
+        -:  238:            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+        -:  239:            // and recheck the time remaining each time through the loop. However, because we can't
+        -:  240:            // check the predicate each time do_wait_until() completes, this introduces the possibility
+        -:  241:            // of not exiting the function when a notification occurs, since do_wait_until() may report
+        -:  242:            // that it timed out even though a notification was received. The best this function can do
+        -:  243:            // is report correctly whether or not it reached the timeout time.
+        -:  244:            const detail::platform_duration d(ts - detail::real_platform_clock::now());
+        -:  245:            do_wait_until(m, detail::internal_platform_clock::now() + d);
+        -:  246:            return ts > detail::real_platform_clock::now();
+        -:  247:#else
+        -:  248:            return do_wait_until(m, ts);
+        -:  249:#endif
+        -:  250:        }
+        -:  251:        template<typename lock_type>
+        -:  252:        bool timed_wait(lock_type& m,xtime const& abs_time)
+        -:  253:        {
+        -:  254:            return timed_wait(m,system_time(abs_time));
+        -:  255:        }
+        -:  256:
+        -:  257:        template<typename lock_type,typename duration_type>
+        -:  258:        bool timed_wait(lock_type& m,duration_type const& wait_duration)
+        -:  259:        {
+        -:  260:            if (wait_duration.is_pos_infinity())
+        -:  261:            {
+        -:  262:                wait(m);
+        -:  263:                return true;
+        -:  264:            }
+        -:  265:            if (wait_duration.is_special())
+        -:  266:            {
+        -:  267:                return true;
+        -:  268:            }
+        -:  269:            detail::platform_duration d(wait_duration);
+        -:  270:#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
+        -:  271:            // The system time may jump while this function is waiting. To compensate for this and time
+        -:  272:            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+        -:  273:            // and recheck the time remaining each time through the loop. However, because we can't
+        -:  274:            // check the predicate each time do_wait_until() completes, this introduces the possibility
+        -:  275:            // of not exiting the function when a notification occurs, since do_wait_until() may report
+        -:  276:            // that it timed out even though a notification was received. The best this function can do
+        -:  277:            // is report correctly whether or not it reached the timeout time.
+        -:  278:            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+        -:  279:            do_wait_until(m, detail::internal_platform_clock::now() + d);
+        -:  280:            return ts > detail::mono_platform_clock::now();
+        -:  281:#else
+        -:  282:            return do_wait_until(m, detail::internal_platform_clock::now() + d);
+        -:  283:#endif
+        -:  284:        }
+        -:  285:
+        -:  286:        template<typename lock_type,typename predicate_type>
+        -:  287:        bool timed_wait(lock_type& m,boost::system_time const& abs_time, predicate_type pred)
+        -:  288:        {
+        -:  289:#if defined BOOST_THREAD_WAIT_BUG
+        -:  290:            const detail::real_platform_timepoint ts(abs_time + BOOST_THREAD_WAIT_BUG);
+        -:  291:#else
+        -:  292:            const detail::real_platform_timepoint ts(abs_time);
+        -:  293:#endif
+        -:  294:            while (!pred())
+        -:  295:            {
+        -:  296:#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+        -:  297:                // The system time may jump while this function is waiting. To compensate for this
+        -:  298:                // and time out near the correct time, we call do_wait_until() in a loop with a
+        -:  299:                // short timeout and recheck the time remaining each time through the loop.
+        -:  300:                detail::platform_duration d(ts - detail::real_platform_clock::now());
+        -:  301:                if (d <= detail::platform_duration::zero()) break; // timeout occurred
+        -:  302:                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  303:                do_wait_until(m, detail::internal_platform_clock::now() + d);
+        -:  304:#else
+        -:  305:                if (!do_wait_until(m, ts)) break; // timeout occurred
+        -:  306:#endif
+        -:  307:            }
+        -:  308:            return pred();
+        -:  309:        }
+        -:  310:
+        -:  311:        template<typename lock_type,typename predicate_type>
+        -:  312:        bool timed_wait(lock_type& m,xtime const& abs_time, predicate_type pred)
+        -:  313:        {
+        -:  314:            return timed_wait(m,system_time(abs_time),pred);
+        -:  315:        }
+        -:  316:
+        -:  317:        template<typename lock_type,typename duration_type,typename predicate_type>
+        -:  318:        bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
+        -:  319:        {
+        -:  320:            if (wait_duration.is_pos_infinity())
+        -:  321:            {
+        -:  322:                while (!pred())
+        -:  323:                {
+        -:  324:                    wait(m);
+        -:  325:                }
+        -:  326:                return true;
+        -:  327:            }
+        -:  328:            if (wait_duration.is_special())
+        -:  329:            {
+        -:  330:                return pred();
+        -:  331:            }
+        -:  332:            detail::platform_duration d(wait_duration);
+        -:  333:#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
+        -:  334:            // The system time may jump while this function is waiting. To compensate for this
+        -:  335:            // and time out near the correct time, we call do_wait_until() in a loop with a
+        -:  336:            // short timeout and recheck the time remaining each time through the loop.
+        -:  337:            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+        -:  338:            while (!pred())
+        -:  339:            {
+        -:  340:                if (d <= detail::platform_duration::zero()) break; // timeout occurred
+        -:  341:                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  342:                do_wait_until(m, detail::internal_platform_clock::now() + d);
+        -:  343:                d = ts - detail::mono_platform_clock::now();
+        -:  344:            }
+        -:  345:#else
+        -:  346:            const detail::internal_platform_timepoint ts(detail::internal_platform_clock::now() + d);
+        -:  347:            while (!pred())
+        -:  348:            {
+        -:  349:                if (!do_wait_until(m, ts)) break; // timeout occurred
+        -:  350:            }
+        -:  351:#endif
+        -:  352:            return pred();
+        -:  353:        }
+        -:  354:#endif
+        -:  355:
+        -:  356:#ifdef BOOST_THREAD_USES_CHRONO
+        -:  357:        template <class lock_type,class Duration>
+        -:  358:        cv_status
+        -:  359:        wait_until(
+        -:  360:                lock_type& lock,
+        -:  361:                const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
+        -:  362:        {
+        -:  363:            const boost::detail::internal_platform_timepoint ts(t);
+        -:  364:            if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+        -:  365:            else return cv_status::timeout;
+        -:  366:        }
+        -:  367:
+        -:  368:        template <class lock_type, class Clock, class Duration>
+        -:  369:        cv_status
+        -:  370:        wait_until(
+        -:  371:                lock_type& lock,
+        -:  372:                const chrono::time_point<Clock, Duration>& t)
+        -:  373:        {
+        -:  374:            // The system time may jump while this function is waiting. To compensate for this and time
+        -:  375:            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+        -:  376:            // and recheck the time remaining each time through the loop. However, because we can't
+        -:  377:            // check the predicate each time do_wait_until() completes, this introduces the possibility
+        -:  378:            // of not exiting the function when a notification occurs, since do_wait_until() may report
+        -:  379:            // that it timed out even though a notification was received. The best this function can do
+        -:  380:            // is report correctly whether or not it reached the timeout time.
+        -:  381:            typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+        -:  382:            common_duration d(t - Clock::now());
+        -:  383:            do_wait_until(lock, detail::internal_chrono_clock::now() + d);
+        -:  384:            if (t > Clock::now()) return cv_status::no_timeout;
+        -:  385:            else return cv_status::timeout;
+        -:  386:        }
+        -:  387:
+        -:  388:        template <class lock_type, class Rep, class Period>
+        -:  389:        cv_status
+        -:  390:        wait_for(
+        -:  391:                lock_type& lock,
+        -:  392:                const chrono::duration<Rep, Period>& d)
+        -:  393:        {
+        -:  394:            return wait_until(lock, chrono::steady_clock::now() + d);
+        -:  395:        }
+        -:  396:
+        -:  397:        template <class lock_type, class Duration, class Predicate>
+        -:  398:        bool
+        -:  399:        wait_until(
+        -:  400:                lock_type& lock,
+        -:  401:                const chrono::time_point<detail::internal_chrono_clock, Duration>& t,
+        -:  402:                Predicate pred)
+        -:  403:        {
+        -:  404:            const detail::internal_platform_timepoint ts(t);
+        -:  405:            while (!pred())
+        -:  406:            {
+        -:  407:                if (!do_wait_until(lock, ts)) break; // timeout occurred
+        -:  408:            }
+        -:  409:            return pred();
+        -:  410:        }
+        -:  411:
+        -:  412:        template <class lock_type, class Clock, class Duration, class Predicate>
+        -:  413:        bool
+        -:  414:        wait_until(
+        -:  415:                lock_type& lock,
+        -:  416:                const chrono::time_point<Clock, Duration>& t,
+        -:  417:                Predicate pred)
+        -:  418:        {
+        -:  419:            // The system time may jump while this function is waiting. To compensate for this
+        -:  420:            // and time out near the correct time, we call do_wait_until() in a loop with a
+        -:  421:            // short timeout and recheck the time remaining each time through the loop.
+        -:  422:            typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+        -:  423:            while (!pred())
+        -:  424:            {
+        -:  425:                common_duration d(t - Clock::now());
+        -:  426:                if (d <= common_duration::zero()) break; // timeout occurred
+        -:  427:                d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
+        -:  428:                do_wait_until(lock, detail::internal_platform_clock::now() + detail::platform_duration(d));
+        -:  429:            }
+        -:  430:            return pred();
+        -:  431:        }
+        -:  432:
+        -:  433:        template <class lock_type, class Rep, class Period, class Predicate>
+        -:  434:        bool
+        -:  435:        wait_for(
+        -:  436:                lock_type& lock,
+        -:  437:                const chrono::duration<Rep, Period>& d,
+        -:  438:                Predicate pred)
+        -:  439:        {
+        -:  440:            return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+        -:  441:        }
+        -:  442:#endif
+        -:  443:
+        -:  444:        void notify_one() BOOST_NOEXCEPT
+        -:  445:        {
+        -:  446:            boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+        -:  447:            BOOST_VERIFY(!pthread_cond_signal(&cond));
+        -:  448:        }
+        -:  449:
+        -:  450:        void notify_all() BOOST_NOEXCEPT
+        -:  451:        {
+        -:  452:            boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+        -:  453:            BOOST_VERIFY(!pthread_cond_broadcast(&cond));
+        -:  454:        }
+        -:  455:    private:
+        -:  456:
+        -:  457:        // When this function returns true:
+        -:  458:        // * A notification (or sometimes a spurious OS signal) has been received
+        -:  459:        // * Do not assume that the timeout has not been reached
+        -:  460:        // * Do not assume that the predicate has been changed
+        -:  461:        //
+        -:  462:        // When this function returns false:
+        -:  463:        // * The timeout has been reached
+        -:  464:        // * Do not assume that a notification has not been received
+        -:  465:        // * Do not assume that the predicate has not been changed
+        -:  466:        template <class lock_type>
+        -:  467:        bool do_wait_until(
+        -:  468:          lock_type& m,
+        -:  469:          detail::internal_platform_timepoint const &timeout)
+        -:  470:        {
+        -:  471:          int res=0;
+        -:  472:          {
+        -:  473:              thread_cv_detail::lock_on_exit<lock_type> guard;
+        -:  474:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  475:              detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+        -:  476:#else
+        -:  477:              boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
+        -:  478:#endif
+        -:  479:              guard.activate(m);
+        -:  480:              res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout.getTs());
+        -:  481:              check_for_interruption.unlock_if_locked();
+        -:  482:              guard.deactivate();
+        -:  483:          }
+        -:  484:#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        -:  485:          this_thread::interruption_point();
+        -:  486:#endif
+        -:  487:          if(res==ETIMEDOUT)
+        -:  488:          {
+        -:  489:              return false;
+        -:  490:          }
+        -:  491:          if(res)
+        -:  492:          {
+        -:  493:              boost::throw_exception(condition_error(res, "boost::condition_variable_any::do_wait_until() failed in pthread_cond_timedwait"));
+        -:  494:          }
+        -:  495:          return true;
+        -:  496:        }
+        -:  497:    };
+        -:  498:}
+        -:  499:
+        -:  500:#include <boost/config/abi_suffix.hpp>
+        -:  501:
+        -:  502:#endif

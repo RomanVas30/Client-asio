@@ -1,0 +1,441 @@
+        -:    0:Source:/root/.hunter/_Base/70287b1/fc9dcb2/dffbc08/Install/include/boost/thread/pthread/recursive_mutex.hpp
+        -:    0:Graph:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcno
+        -:    0:Data:/home/vagrant/labs/lab-08-asio-client/_builds/gcc-7-cxx17-pic-Debug/CMakeFiles/client.dir/sources/client.cpp.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#ifndef BOOST_THREAD_PTHREAD_RECURSIVE_MUTEX_HPP
+        -:    2:#define BOOST_THREAD_PTHREAD_RECURSIVE_MUTEX_HPP
+        -:    3:// (C) Copyright 2007-8 Anthony Williams
+        -:    4:// (C) Copyright 2011-2012 Vicente J. Botet Escriba
+        -:    5:// Distributed under the Boost Software License, Version 1.0. (See
+        -:    6:// accompanying file LICENSE_1_0.txt or copy at
+        -:    7:// http://www.boost.org/LICENSE_1_0.txt)
+        -:    8:
+        -:    9:#include <pthread.h>
+        -:   10:#include <boost/throw_exception.hpp>
+        -:   11:#include <boost/thread/exceptions.hpp>
+        -:   12:#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+        -:   13:#include <boost/thread/lock_types.hpp>
+        -:   14:#endif
+        -:   15:#include <boost/thread/thread_time.hpp>
+        -:   16:#include <boost/assert.hpp>
+        -:   17:#ifndef _WIN32
+        -:   18:#include <unistd.h>
+        -:   19:#endif
+        -:   20:#include <boost/date_time/posix_time/conversion.hpp>
+        -:   21:#include <errno.h>
+        -:   22:#include <boost/thread/detail/platform_time.hpp>
+        -:   23:#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+        -:   24:#include <boost/thread/pthread/pthread_helpers.hpp>
+        -:   25:#ifdef BOOST_THREAD_USES_CHRONO
+        -:   26:#include <boost/chrono/system_clocks.hpp>
+        -:   27:#include <boost/chrono/ceil.hpp>
+        -:   28:#endif
+        -:   29:#include <boost/thread/detail/delete.hpp>
+        -:   30:
+        -:   31:
+        -:   32:#if  defined BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE \
+        -:   33: ||  defined __ANDROID__
+        -:   34:#define BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
+        -:   35:#endif
+        -:   36:
+        -:   37:#if defined BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE && defined BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
+        -:   38:#define BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+        -:   39:#endif
+        -:   40:
+        -:   41:#include <boost/config/abi_prefix.hpp>
+        -:   42:
+        -:   43:namespace boost
+        -:   44:{
+        -:   45:    class recursive_mutex
+        -:   46:    {
+        -:   47:    private:
+        -:   48:        pthread_mutex_t m;
+        -:   49:#ifndef BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
+        -:   50:        pthread_cond_t cond;
+        -:   51:        bool is_locked;
+        -:   52:        pthread_t owner;
+        -:   53:        unsigned count;
+        -:   54:#endif
+        -:   55:    public:
+        -:   56:        BOOST_THREAD_NO_COPYABLE(recursive_mutex)
+        1:   57:        recursive_mutex()
+        1:   58:        {
+        -:   59:#ifdef BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
+        -:   60:            pthread_mutexattr_t attr;
+        -:   61:
+        1:   62:            int const init_attr_res=pthread_mutexattr_init(&attr);
+        1:   63:            if(init_attr_res)
+        -:   64:            {
+    #####:   65:                boost::throw_exception(thread_resource_error(init_attr_res, "boost:: recursive_mutex constructor failed in pthread_mutexattr_init"));
+        -:   66:            }
+        1:   67:            int const set_attr_res=pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
+        1:   68:            if(set_attr_res)
+        -:   69:            {
+    #####:   70:                BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
+    #####:   71:                boost::throw_exception(thread_resource_error(set_attr_res, "boost:: recursive_mutex constructor failed in pthread_mutexattr_settype"));
+        -:   72:            }
+        -:   73:
+        1:   74:            int const res=pthread_mutex_init(&m,&attr);
+        1:   75:            if(res)
+        -:   76:            {
+    #####:   77:                BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
+    #####:   78:                boost::throw_exception(thread_resource_error(res, "boost:: recursive_mutex constructor failed in pthread_mutex_init"));
+        -:   79:            }
+        1:   80:            BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
+        -:   81:#else
+        -:   82:            int const res=pthread_mutex_init(&m,NULL);
+        -:   83:            if(res)
+        -:   84:            {
+        -:   85:                boost::throw_exception(thread_resource_error(res, "boost:: recursive_mutex constructor failed in pthread_mutex_init"));
+        -:   86:            }
+        -:   87:            int const res2=pthread::cond_init(cond);
+        -:   88:            if(res2)
+        -:   89:            {
+        -:   90:                BOOST_VERIFY(!pthread_mutex_destroy(&m));
+        -:   91:                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_mutex constructor failed in pthread::cond_init"));
+        -:   92:            }
+        -:   93:            is_locked=false;
+        -:   94:            count=0;
+        -:   95:#endif
+        1:   96:        }
+        1:   97:        ~recursive_mutex()
+        1:   98:        {
+        1:   99:            BOOST_VERIFY(!pthread_mutex_destroy(&m));
+        -:  100:#ifndef BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
+        -:  101:            BOOST_VERIFY(!pthread_cond_destroy(&cond));
+        -:  102:#endif
+        1:  103:        }
+        -:  104:
+        -:  105:#ifdef BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
+    #####:  106:        void lock()
+        -:  107:        {
+    #####:  108:            BOOST_VERIFY(!pthread_mutex_lock(&m));
+    #####:  109:        }
+        -:  110:
+    #####:  111:        void unlock()
+        -:  112:        {
+    #####:  113:            BOOST_VERIFY(!pthread_mutex_unlock(&m));
+    #####:  114:        }
+        -:  115:
+        -:  116:        bool try_lock() BOOST_NOEXCEPT
+        -:  117:        {
+        -:  118:            int const res=pthread_mutex_trylock(&m);
+        -:  119:            BOOST_ASSERT(!res || res==EBUSY);
+        -:  120:            return !res;
+        -:  121:        }
+        -:  122:#define BOOST_THREAD_DEFINES_RECURSIVE_MUTEX_NATIVE_HANDLE
+        -:  123:        typedef pthread_mutex_t* native_handle_type;
+        -:  124:        native_handle_type native_handle()
+        -:  125:        {
+        -:  126:            return &m;
+        -:  127:        }
+        -:  128:
+        -:  129:#else
+        -:  130:        void lock()
+        -:  131:        {
+        -:  132:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  133:            if(is_locked && pthread_equal(owner,pthread_self()))
+        -:  134:            {
+        -:  135:                ++count;
+        -:  136:                return;
+        -:  137:            }
+        -:  138:
+        -:  139:            while(is_locked)
+        -:  140:            {
+        -:  141:                BOOST_VERIFY(!pthread_cond_wait(&cond,&m));
+        -:  142:            }
+        -:  143:            is_locked=true;
+        -:  144:            ++count;
+        -:  145:            owner=pthread_self();
+        -:  146:        }
+        -:  147:
+        -:  148:        void unlock()
+        -:  149:        {
+        -:  150:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  151:            if(!--count)
+        -:  152:            {
+        -:  153:                is_locked=false;
+        -:  154:            }
+        -:  155:            BOOST_VERIFY(!pthread_cond_signal(&cond));
+        -:  156:        }
+        -:  157:
+        -:  158:        bool try_lock()
+        -:  159:        {
+        -:  160:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  161:            if(is_locked && !pthread_equal(owner,pthread_self()))
+        -:  162:            {
+        -:  163:                return false;
+        -:  164:            }
+        -:  165:            is_locked=true;
+        -:  166:            ++count;
+        -:  167:            owner=pthread_self();
+        -:  168:            return true;
+        -:  169:        }
+        -:  170:
+        -:  171:#endif
+        -:  172:
+        -:  173:#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+        -:  174:        typedef unique_lock<recursive_mutex> scoped_lock;
+        -:  175:        typedef detail::try_lock_wrapper<recursive_mutex> scoped_try_lock;
+        -:  176:#endif
+        -:  177:    };
+        -:  178:
+        -:  179:    typedef recursive_mutex recursive_try_mutex;
+        -:  180:
+        -:  181:    class recursive_timed_mutex
+        -:  182:    {
+        -:  183:    private:
+        -:  184:        pthread_mutex_t m;
+        -:  185:#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+        -:  186:        pthread_cond_t cond;
+        -:  187:        bool is_locked;
+        -:  188:        pthread_t owner;
+        -:  189:        unsigned count;
+        -:  190:#endif
+        -:  191:    public:
+        -:  192:        BOOST_THREAD_NO_COPYABLE(recursive_timed_mutex)
+        -:  193:        recursive_timed_mutex()
+        -:  194:        {
+        -:  195:#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+        -:  196:            pthread_mutexattr_t attr;
+        -:  197:
+        -:  198:            int const init_attr_res=pthread_mutexattr_init(&attr);
+        -:  199:            if(init_attr_res)
+        -:  200:            {
+        -:  201:                boost::throw_exception(thread_resource_error(init_attr_res, "boost:: recursive_timed_mutex constructor failed in pthread_mutexattr_init"));
+        -:  202:            }
+        -:  203:            int const set_attr_res=pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
+        -:  204:            if(set_attr_res)
+        -:  205:            {
+        -:  206:                boost::throw_exception(thread_resource_error(set_attr_res, "boost:: recursive_timed_mutex constructor failed in pthread_mutexattr_settype"));
+        -:  207:            }
+        -:  208:
+        -:  209:            int const res=pthread_mutex_init(&m,&attr);
+        -:  210:            if(res)
+        -:  211:            {
+        -:  212:                BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
+        -:  213:                boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
+        -:  214:            }
+        -:  215:            BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
+        -:  216:#else
+        -:  217:            int const res=pthread_mutex_init(&m,NULL);
+        -:  218:            if(res)
+        -:  219:            {
+        -:  220:                boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
+        -:  221:            }
+        -:  222:            int const res2=pthread::cond_init(cond);
+        -:  223:            if(res2)
+        -:  224:            {
+        -:  225:                BOOST_VERIFY(!pthread_mutex_destroy(&m));
+        -:  226:                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_timed_mutex constructor failed in pthread::cond_init"));
+        -:  227:            }
+        -:  228:            is_locked=false;
+        -:  229:            count=0;
+        -:  230:#endif
+        -:  231:        }
+        -:  232:        ~recursive_timed_mutex()
+        -:  233:        {
+        -:  234:            BOOST_VERIFY(!pthread_mutex_destroy(&m));
+        -:  235:#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+        -:  236:            BOOST_VERIFY(!pthread_cond_destroy(&cond));
+        -:  237:#endif
+        -:  238:        }
+        -:  239:
+        -:  240:#if defined BOOST_THREAD_USES_DATETIME
+        -:  241:        template<typename TimeDuration>
+        -:  242:        bool timed_lock(TimeDuration const & relative_time)
+        -:  243:        {
+        -:  244:            if (relative_time.is_pos_infinity())
+        -:  245:            {
+        -:  246:                lock();
+        -:  247:                return true;
+        -:  248:            }
+        -:  249:            if (relative_time.is_special())
+        -:  250:            {
+        -:  251:                return true;
+        -:  252:            }
+        -:  253:            detail::platform_duration d(relative_time);
+        -:  254:#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
+        -:  255:            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+        -:  256:            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  257:            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
+        -:  258:            {
+        -:  259:              d = ts - detail::mono_platform_clock::now();
+        -:  260:              if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
+        -:  261:              d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  262:            }
+        -:  263:            return true;
+        -:  264:#else
+        -:  265:            return do_try_lock_until(detail::internal_platform_clock::now() + d);
+        -:  266:#endif
+        -:  267:        }
+        -:  268:#endif
+        -:  269:
+        -:  270:#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+        -:  271:        void lock()
+        -:  272:        {
+        -:  273:            BOOST_VERIFY(!pthread_mutex_lock(&m));
+        -:  274:        }
+        -:  275:
+        -:  276:        void unlock()
+        -:  277:        {
+        -:  278:            BOOST_VERIFY(!pthread_mutex_unlock(&m));
+        -:  279:        }
+        -:  280:
+        -:  281:        bool try_lock()
+        -:  282:        {
+        -:  283:            int const res=pthread_mutex_trylock(&m);
+        -:  284:            BOOST_ASSERT(!res || res==EBUSY);
+        -:  285:            return !res;
+        -:  286:        }
+        -:  287:    private:
+        -:  288:        bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
+        -:  289:        {
+        -:  290:            int const res=pthread_mutex_timedlock(&m,&timeout.getTs());
+        -:  291:            BOOST_ASSERT(!res || res==ETIMEDOUT);
+        -:  292:            return !res;
+        -:  293:        }
+        -:  294:
+        -:  295:    public:
+        -:  296:
+        -:  297:#else
+        -:  298:        void lock()
+        -:  299:        {
+        -:  300:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  301:            if(is_locked && pthread_equal(owner,pthread_self()))
+        -:  302:            {
+        -:  303:                ++count;
+        -:  304:                return;
+        -:  305:            }
+        -:  306:
+        -:  307:            while(is_locked)
+        -:  308:            {
+        -:  309:                BOOST_VERIFY(!pthread_cond_wait(&cond,&m));
+        -:  310:            }
+        -:  311:            is_locked=true;
+        -:  312:            ++count;
+        -:  313:            owner=pthread_self();
+        -:  314:        }
+        -:  315:
+        -:  316:        void unlock()
+        -:  317:        {
+        -:  318:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  319:            if(!--count)
+        -:  320:            {
+        -:  321:                is_locked=false;
+        -:  322:            }
+        -:  323:            BOOST_VERIFY(!pthread_cond_signal(&cond));
+        -:  324:        }
+        -:  325:
+        -:  326:        bool try_lock() BOOST_NOEXCEPT
+        -:  327:        {
+        -:  328:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  329:            if(is_locked && !pthread_equal(owner,pthread_self()))
+        -:  330:            {
+        -:  331:                return false;
+        -:  332:            }
+        -:  333:            is_locked=true;
+        -:  334:            ++count;
+        -:  335:            owner=pthread_self();
+        -:  336:            return true;
+        -:  337:        }
+        -:  338:
+        -:  339:    private:
+        -:  340:        bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
+        -:  341:        {
+        -:  342:            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+        -:  343:            if(is_locked && pthread_equal(owner,pthread_self()))
+        -:  344:            {
+        -:  345:                ++count;
+        -:  346:                return true;
+        -:  347:            }
+        -:  348:            while(is_locked)
+        -:  349:            {
+        -:  350:                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.getTs());
+        -:  351:                if(cond_res==ETIMEDOUT)
+        -:  352:                {
+        -:  353:                    break;
+        -:  354:                }
+        -:  355:                BOOST_ASSERT(!cond_res);
+        -:  356:            }
+        -:  357:            if(is_locked)
+        -:  358:            {
+        -:  359:                return false;
+        -:  360:            }
+        -:  361:            is_locked=true;
+        -:  362:            ++count;
+        -:  363:            owner=pthread_self();
+        -:  364:            return true;
+        -:  365:        }
+        -:  366:    public:
+        -:  367:
+        -:  368:#endif
+        -:  369:
+        -:  370:#if defined BOOST_THREAD_USES_DATETIME
+        -:  371:        bool timed_lock(system_time const & abs_time)
+        -:  372:        {
+        -:  373:            const detail::real_platform_timepoint ts(abs_time);
+        -:  374:#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+        -:  375:            detail::platform_duration d(ts - detail::real_platform_clock::now());
+        -:  376:            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  377:            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
+        -:  378:            {
+        -:  379:              d = ts - detail::real_platform_clock::now();
+        -:  380:              if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
+        -:  381:              d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
+        -:  382:            }
+        -:  383:            return true;
+        -:  384:#else
+        -:  385:            return do_try_lock_until(ts);
+        -:  386:#endif
+        -:  387:        }
+        -:  388:#endif
+        -:  389:#ifdef BOOST_THREAD_USES_CHRONO
+        -:  390:        template <class Rep, class Period>
+        -:  391:        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        -:  392:        {
+        -:  393:          return try_lock_until(chrono::steady_clock::now() + rel_time);
+        -:  394:        }
+        -:  395:        template <class Clock, class Duration>
+        -:  396:        bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
+        -:  397:        {
+        -:  398:          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+        -:  399:          common_duration d(t - Clock::now());
+        -:  400:          d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
+        -:  401:          while ( ! try_lock_until(detail::internal_chrono_clock::now() + d))
+        -:  402:          {
+        -:  403:              d = t - Clock::now();
+        -:  404:              if ( d <= common_duration::zero() ) return false; // timeout occurred
+        -:  405:              d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
+        -:  406:          }
+        -:  407:          return true;
+        -:  408:
+        -:  409:        }
+        -:  410:        template <class Duration>
+        -:  411:        bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
+        -:  412:        {
+        -:  413:          detail::internal_platform_timepoint ts(t);
+        -:  414:          return do_try_lock_until(ts);
+        -:  415:        }
+        -:  416:#endif
+        -:  417:
+        -:  418:#define BOOST_THREAD_DEFINES_RECURSIVE_TIMED_MUTEX_NATIVE_HANDLE
+        -:  419:        typedef pthread_mutex_t* native_handle_type;
+        -:  420:        native_handle_type native_handle()
+        -:  421:        {
+        -:  422:            return &m;
+        -:  423:        }
+        -:  424:
+        -:  425:#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+        -:  426:        typedef unique_lock<recursive_timed_mutex> scoped_timed_lock;
+        -:  427:        typedef detail::try_lock_wrapper<recursive_timed_mutex> scoped_try_lock;
+        -:  428:        typedef scoped_timed_lock scoped_lock;
+        -:  429:#endif
+        -:  430:    };
+        -:  431:
+        -:  432:}
+        -:  433:
+        -:  434:#include <boost/config/abi_suffix.hpp>
+        -:  435:
+        -:  436:#endif
